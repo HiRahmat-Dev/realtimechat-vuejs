@@ -53,7 +53,38 @@
             <img src="@/assets/img/svg/menu-dot.svg">
           </div>
         </header>
-        <div class="chat-wrapper">
+        <div class="chat-wrapper gap">
+          <div class="message received-msg">
+            <div class="message-wrapper">
+              <div class="photo">
+                <img src="@/assets/img/sender.jpg">
+              </div>
+              <div class="message-info">
+                <div class="bubble-message">
+                  <p>Hi, happy to met you ya! Can you imagine that how it's work?, That's blowed my mind bruhhh...
+                  </p>
+                </div>
+                <div class="time-message">
+                  <span>Friday at 12:30</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="message sent-msg">
+            <div class="message-wrapper">
+              <div class="photo">
+                <img src="@/assets/img/sender.jpg">
+              </div>
+              <div class="message-info">
+                <div class="bubble-message">
+                  <p>Hai, happy to met you ya!</p>
+                </div>
+                <div class="time-message">
+                  <span>Friday at 12:30</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="input-chat gap">
           <div class="attachment">
@@ -120,7 +151,7 @@ header {
   align-items: center;
   width: 100%;
   height: 14vh;
-  color: rgb(114, 114, 114);
+  color: #727272;
 }
 nav header {
   justify-content: center;
@@ -203,7 +234,7 @@ main {
     display: flex;
     flex-direction: column;
     .user-name {
-      color: rgb(80, 80, 80);
+      color: #505050;
     }
     .chat-flash {
       height: 17px;
@@ -234,6 +265,76 @@ main {
   .chat-wrapper {
     height: 86vh;
     overflow: auto;
+    color: #9b9b9b;
+  }
+  .message {
+    display: flex;
+    flex-direction: column;
+    margin: 14px 0 20px;
+    width: 100%;
+    p {
+      line-height: 1.5;
+    }
+    .message-wrapper {
+      display: flex;
+      width: 80%;
+    }
+    .photo {
+      margin-right: 14px;
+    }
+    .message-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .bubble-message {
+      padding: 18px 25px;
+      margin-bottom: 7px;
+      border-radius: 14px 14px 14px 0;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.061);
+    }
+    .time-message {
+      span {
+        font-size: 12px;
+      }
+    }
+    &.received-msg {
+      align-items: flex-start;
+      .message-wrapper {
+        justify-content: flex-start;
+      }
+      .photo {
+        display: block;
+      }
+      .message-info {
+        align-items: flex-start;
+      }
+      .bubble-message {
+        border-radius: 14px 14px 14px 0;
+        background-color: #98D79C;
+        p {
+          color: #ffffff;
+        }
+      }
+    }
+    &.sent-msg {
+      align-items: flex-end;
+      .message-wrapper {
+        justify-content: flex-end;
+      }
+      .photo {
+        display: none;
+      }
+      .message-info {
+        align-items: flex-end;
+      }
+      .bubble-message {
+        border-radius: 14px 14px 0px 14px;
+        background-color: white;
+        p {
+          color: #505050;
+        }
+      }
+    }
   }
   .input-chat {
     margin-top: auto;
@@ -255,8 +356,9 @@ main {
         border: none;
         outline: none;
         width: 100%;
-        padding: 10px 50px 10px 15px;
+        padding: 10px 60px 10px 20px;
         font-size: 18px;
+        color:rgba(0, 0, 0, 0.721);
       }
       button {
         background-color: transparent;

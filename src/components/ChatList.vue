@@ -89,6 +89,7 @@ export default {
     span {
       margin-top: 2.5px;
       font-size: 12px;
+      color: #9b9b9b;
     }
   }
 }
