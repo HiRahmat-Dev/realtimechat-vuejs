@@ -2,15 +2,18 @@
   <div class="chat-list gap"
        :class="{ active: isChatting }">
     <div class="photo">
-      <img src="@/assets/img/sender.jpg">
+      <div class="img">
+        <img src="@/assets/img/sender.jpg">
+      </div>
     </div>
     <div class="chat-info">
       <div class="user-name">
         <h4>Rahmat Hidayatullah</h4>
       </div>
       <div class="chat-flash">
-        <span v-show="!isTyping" >Bro, lagi dimana?</span>
-        <span v-show="isTyping" >is typing a message...</span>
+        <span v-show="!isTyping || false" >Bro, lagi dimana?</span>
+        <span class="typing"
+              v-show="isTyping || false" >is typing a message...</span>
       </div>
     </div>
     <div class="time-status">
@@ -21,11 +24,11 @@
 
 <script>
 export default {
-  name: 'Chat List',
-  props: ['typing'],
+  name: 'ChatList',
+  props: ['isTyping', 'photo', 'name'],
   data () {
     return {
-      isTyping: this.typing || false
+      isChatting: false
     }
   }
 }

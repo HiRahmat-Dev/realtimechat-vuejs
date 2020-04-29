@@ -11,7 +11,7 @@
 
 <script>
 export default {
-  name: 'Search Box',
+  name: 'SearchBox',
   props: ['placeholder'],
   data () {
     return {

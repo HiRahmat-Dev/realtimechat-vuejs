@@ -4,7 +4,9 @@
       <header>
         <div class="photo notif-on">
           <img class="dot" src="@/assets/img/svg/dot.svg">
-          <img src="@/assets/img/sender.jpg">
+          <div class="img">
+            <img src="@/assets/img/sender.jpg">
+          </div>
         </div>
       </header>
       <ul class="option menu-1">
@@ -33,18 +35,18 @@
           <SearchBox />
         </header>
         <div class="chat-list__wrapper">
-          <ChatList/>
+          <ChatList :isTyping="false" />
         </div>
       </aside>
       <main>
         <header class="gap">
           <div class="user-info">
             <div class="user-name">
-              <h4>Rahmat Hidayatullah</h4>
+              <h4>Rahmat</h4>
             </div>
             <div class="chat-flash">
-              <span v-show="!isTyping" >Last seen 2 hours ago</span>
-              <span v-show="isTyping" >is typing a message...</span>
+              <span v-show="true" >Last seen 2 hours ago</span>
+              <span v-show="false" class="typing">is typing a message...</span>
             </div>
           </div>
           <div class="button-optional">
@@ -54,44 +56,19 @@
           </div>
         </header>
         <div class="chat-wrapper gap">
-          <div class="message received-msg">
-            <div class="message-wrapper">
-              <div class="photo">
-                <img src="@/assets/img/sender.jpg">
-              </div>
-              <div class="message-info">
-                <div class="bubble-message">
-                  <p>Hi, happy to met you ya! Can you imagine that how it's work?, That's blowed my mind bruhhh...
-                  </p>
-                </div>
-                <div class="time-message">
-                  <span>Friday at 12:30</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="message sent-msg">
-            <div class="message-wrapper">
-              <div class="photo">
-                <img src="@/assets/img/sender.jpg">
-              </div>
-              <div class="message-info">
-                <div class="bubble-message">
-                  <p>Hai, happy to met you ya!</p>
-                </div>
-                <div class="time-message">
-                  <span>Friday at 12:30</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <Message v-for="(message, i) in messages" :key="i"
+                   :authUser="message.uid === authUser.uid"
+                   :photo="message.photoURL"
+                   :message="message.message"
+                   :time="timeFormat(message.createdAt.toDate())"/>
         </div>
         <div class="input-chat gap">
           <div class="attachment">
             <img src="@/assets/img/svg/attach-file.svg">
           </div>
-          <form @submit.prevent >
-            <input type="text" placeholder="Type your message here">
+          <form @submit.prevent="sendMessage" >
+            <input type="text" placeholder="Type your message here"
+                   v-model="valueMessage">
             <button>
               <img src="@/assets/img/svg/send.svg">
             </button>
@@ -105,17 +82,104 @@
 <script>
 import SearchBox from '@/components/SearchBox.vue'
 import ChatList from '@/components/ChatList.vue'
+import Message from '@/components/Message.vue'
+import { mapState } from 'vuex'
 
 export default {
   name: 'Home',
   data () {
     return {
-      optionMenu1: 3
+      optionMenu1: 3,
+      valueMessage: ''
     }
   },
   components: {
     SearchBox,
-    ChatList
+    ChatList,
+    Message
+  },
+  computed: {
+    ...mapState([
+      'messages',
+      'authUser'
+    ])
+  },
+  methods: {
+    timeFormat (target) {
+      const elapsedTime = new Date() - target
+      const msPerMinute = 60 * 1000
+      const msPerHour = msPerMinute * 60
+      const msPerDay = msPerHour * 24
+      const msPerMonth = msPerDay * 30
+      const msPerYear = msPerDay * 365
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+      if (elapsedTime < msPerMinute) {
+        return Math.round(elapsedTime / 1000) + 1 + ' seconds ago'
+      } else if (elapsedTime < msPerHour) {
+        return Math.round(elapsedTime / msPerMinute) + ' minutes ago'
+      } else if (elapsedTime < msPerDay) {
+        return target.getHours() + ':' + target.getMinutes()
+      } else if (elapsedTime < msPerMonth) {
+        return days[target.getDay()] + ' at ' + target.getHours() + ':' + target.getMinutes()
+      } else if (elapsedTime < msPerYear) {
+        return months[target.getMonth()] + ', ' + target.getDate() + '/' + target.getFullYear() + ' at ' + target.getHours() + ':' + target.getMinutes()
+      }
+    },
+    sendMessage () {
+      if (this.valueMessage === '') return
+      else {
+        this.$db.collection('messages').add({
+          uid: this.authUser.uid,
+          name: this.authUser.displayName,
+          message: this.valueMessage,
+          photoURL: this.authUser.photoURL,
+          createdAt: new Date()
+        })
+      }
+      // .then((docRef) => {
+      //   console.log('Document written with ID: ', docRef.id)
+      // })
+      // .catch((error) => {
+      //   console.error('Error adding document: ', error)
+      // })
+      this.valueMessage = ''
+    }
+  },
+  created () {
+    this.$firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        const {
+          displayName,
+          email,
+          emailVerified,
+          photoURL,
+          isAnonymous,
+          uid,
+          providerData
+        } = user
+        // eslint-disable-next-line no-unused-vars
+        const data = {
+          isTyping: false,
+          uid,
+          displayName,
+          email,
+          emailVerified,
+          photoURL,
+          isAnonymous,
+          providerData
+        }
+        this.$store.commit('SET_AUTH_USER', { user: data })
+      } else {
+        this.$store.commit('DELETE_AUTH_USER')
+      }
+    })
+    this.$store.dispatch('fetchMessages')
+  },
+  mounted () {
+    setInterval(() => {
+      this.$store.dispatch('fetchMessages')
+    }, 30000)
   }
 }
 </script>
@@ -138,12 +202,18 @@ nav, aside, main {
   position: relative;
   .dot {
     position: absolute;
-    bottom: 1px;
-    right: 1px;
+    bottom: 0px;
+    right: 0px;
     width: 17px;
     height: 17px;
-    border: 3.5px solid white;
     z-index: 3;
+    border-radius: 50%;
+    background-color: white;
+    padding: 3px;
+    img {
+      width: 80%;
+      height: 80%;
+    }
   }
 }
 header {
@@ -158,10 +228,16 @@ nav header {
 }
 div.photo {
   position: relative;
-  img {
+  .img {
     border-radius: 50%;
     width: 50px;
-    object-fit: cover;
+    height: 50px;
+    overflow: hidden;
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
   }
 }
 nav {
@@ -205,6 +281,9 @@ nav {
 }
 .body {
   width: 100%;
+}
+.typing {
+  color: #98D79C;
 }
 aside {
   width: 600px;
@@ -266,75 +345,6 @@ main {
     height: 86vh;
     overflow: auto;
     color: #9b9b9b;
-  }
-  .message {
-    display: flex;
-    flex-direction: column;
-    margin: 14px 0 20px;
-    width: 100%;
-    p {
-      line-height: 1.5;
-    }
-    .message-wrapper {
-      display: flex;
-      width: 80%;
-    }
-    .photo {
-      margin-right: 14px;
-    }
-    .message-info {
-      display: flex;
-      flex-direction: column;
-    }
-    .bubble-message {
-      padding: 18px 25px;
-      margin-bottom: 7px;
-      border-radius: 14px 14px 14px 0;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.061);
-    }
-    .time-message {
-      span {
-        font-size: 12px;
-      }
-    }
-    &.received-msg {
-      align-items: flex-start;
-      .message-wrapper {
-        justify-content: flex-start;
-      }
-      .photo {
-        display: block;
-      }
-      .message-info {
-        align-items: flex-start;
-      }
-      .bubble-message {
-        border-radius: 14px 14px 14px 0;
-        background-color: #98D79C;
-        p {
-          color: #ffffff;
-        }
-      }
-    }
-    &.sent-msg {
-      align-items: flex-end;
-      .message-wrapper {
-        justify-content: flex-end;
-      }
-      .photo {
-        display: none;
-      }
-      .message-info {
-        align-items: flex-end;
-      }
-      .bubble-message {
-        border-radius: 14px 14px 0px 14px;
-        background-color: white;
-        p {
-          color: #505050;
-        }
-      }
-    }
   }
   .input-chat {
     margin-top: auto;
