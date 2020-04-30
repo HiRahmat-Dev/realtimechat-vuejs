@@ -5,7 +5,7 @@
         <div class="photo notif-on">
           <img class="dot" src="@/assets/img/svg/dot.svg">
           <div class="img">
-            <img src="@/assets/img/sender.jpg">
+            <img :src="authUser.photoURL">
           </div>
         </div>
       </header>
@@ -35,14 +35,25 @@
           <SearchBox />
         </header>
         <div class="chat-list__wrapper">
-          <ChatList :isTyping="false" />
+          <ChatList v-for="(chat, i) in chats" :key="i" :chat="chat"
+                    @chat-click="selectChat"
+                    :isTyping="false"
+                    :photo="chat.userSelected.photoURL"
+                    :name="chat.userSelected.displayName"
+                    :messages="chat.messages"/>
         </div>
+        <button class="add-friend">+</button>
       </aside>
-      <main>
+      <main v-if="!selectedChat" class="chat-empty" >
+        <h1>
+          pilih chat untuk melanjutkan
+        </h1>
+      </main>
+      <main v-if="selectedChat" >
         <header class="gap">
           <div class="user-info">
             <div class="user-name">
-              <h4>Rahmat</h4>
+              <h4>{{ currentChat.userSelected.displayName }}</h4>
             </div>
             <div class="chat-flash">
               <span v-show="true" >Last seen 2 hours ago</span>
@@ -59,8 +70,8 @@
           <Message v-for="(message, i) in messages" :key="i"
                    :authUser="message.uid === authUser.uid"
                    :photo="message.photoURL"
-                   :message="message.message"
-                   :time="timeFormat(message.createdAt.toDate())"/>
+                   :message="message.content"
+                   :time="message.createdAt"/>
         </div>
         <div class="input-chat gap">
           <div class="attachment">
@@ -86,11 +97,14 @@ import Message from '@/components/Message.vue'
 import { mapState } from 'vuex'
 
 export default {
-  name: 'Home',
+  name: 'Chat',
   data () {
     return {
       optionMenu1: 3,
-      valueMessage: ''
+      valueMessage: '',
+      currentChat: {},
+      currentChatId: '',
+      selectedChat: false
     }
   },
   components: {
@@ -100,12 +114,19 @@ export default {
   },
   computed: {
     ...mapState([
-      'messages',
-      'authUser'
+      'chats',
+      'authUser',
+      'messages'
     ])
   },
   methods: {
-    timeFormat (target) {
+    selectChat (chat) {
+      this.$store.dispatch('fetchMessages', chat.id)
+      this.currentChat = chat
+      this.selectedChat = true
+    },
+    timeFormat (targetTime) {
+      const target = targetTime.toDate()
       const elapsedTime = new Date() - target
       const msPerMinute = 60 * 1000
       const msPerHour = msPerMinute * 60
@@ -119,7 +140,7 @@ export default {
       } else if (elapsedTime < msPerHour) {
         return Math.round(elapsedTime / msPerMinute) + ' minutes ago'
       } else if (elapsedTime < msPerDay) {
-        return target.getHours() + ':' + target.getMinutes()
+        return Math.round(elapsedTime / msPerHour) + ' hours ago'
       } else if (elapsedTime < msPerMonth) {
         return days[target.getDay()] + ' at ' + target.getHours() + ':' + target.getMinutes()
       } else if (elapsedTime < msPerYear) {
@@ -130,9 +151,10 @@ export default {
       if (this.valueMessage === '') return
       else {
         this.$db.collection('messages').add({
+          chatId: this.currentChat.id,
           uid: this.authUser.uid,
           name: this.authUser.displayName,
-          message: this.valueMessage,
+          content: this.valueMessage,
           photoURL: this.authUser.photoURL,
           createdAt: new Date()
         })
@@ -155,31 +177,30 @@ export default {
           emailVerified,
           photoURL,
           isAnonymous,
-          uid,
-          providerData
+          uid
         } = user
-        // eslint-disable-next-line no-unused-vars
         const data = {
           isTyping: false,
+          isLogin: true,
           uid,
           displayName,
           email,
           emailVerified,
           photoURL,
           isAnonymous,
-          providerData
+          lastTimeLogin: new Date()
         }
-        this.$store.commit('SET_AUTH_USER', { user: data })
+        this.$db.collection('users').doc(uid).set(data)
+        this.$store.commit('SET_AUTH_USER', data)
+        this.$store.dispatch('fetchChats', uid)
       } else {
-        this.$store.commit('DELETE_AUTH_USER')
+        const { uid } = user
+        const data = {
+          isLogin: false
+        }
+        this.$db.collection('users').doc(uid).set(data, { merge: true })
       }
     })
-    this.$store.dispatch('fetchMessages')
-  },
-  mounted () {
-    setInterval(() => {
-      this.$store.dispatch('fetchMessages')
-    }, 30000)
   }
 }
 </script>
@@ -291,6 +312,26 @@ aside {
   z-index: 1;
   background-color: white;
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.034);
+  button.add-friend {
+    position: absolute;
+    height: 50px;
+    width: 50px;
+    border-radius: 50%;
+    bottom: 25px;
+    right: 25px;
+    outline: none;
+    background-color: #98D79C;
+    box-shadow: 2px 2px 10px rgba(152, 215, 156, 0.551);
+    border: none;
+    color: white;
+    font-size: 50px;
+    font-weight: 300;
+    cursor: pointer;
+    transition: .1s;
+    &:active {
+      transform: translateY(3px);
+    }
+  }
 }
 .chat-list__wrapper {
   overflow: auto;
@@ -303,6 +344,13 @@ main {
   position: relative;
   width: 100%;
   background-color: #f6f6f6;
+  &.chat-empty {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
   header, .button-optional {
     display: flex;
   }
@@ -318,7 +366,6 @@ main {
     .chat-flash {
       height: 17px;
       font-size: 14px;
-      overflow: hidden;
       margin-top: 7px;
       position: relative;
       span {

@@ -1,4 +1,3 @@
-
 <template>
   <div>
     <button @click="login">Login with google account to continue</button>
@@ -21,7 +20,7 @@ export default {
         // The signed-in user info.
         var user = result.user
         // ...
-        this.$router.push('/')
+        this.$router.push('/chat')
       })
         .catch(error => {
         // Handle Errors here.

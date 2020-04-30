@@ -1,17 +1,17 @@
 <template>
-  <div class="chat-list gap"
+  <div @click="$emit('chat-click', chat)" class="chat-list gap"
        :class="{ active: isChatting }">
     <div class="photo">
       <div class="img">
-        <img src="@/assets/img/sender.jpg">
+        <img :src="photo">
       </div>
     </div>
     <div class="chat-info">
       <div class="user-name">
-        <h4>Rahmat Hidayatullah</h4>
+        <h4>{{ name }}</h4>
       </div>
       <div class="chat-flash">
-        <span v-show="!isTyping || false" >Bro, lagi dimana?</span>
+        <span v-show="!isTyping || false" >{{ !messages ? '' : messages[messages.length - 1].content }}</span>
         <span class="typing"
               v-show="isTyping || false" >is typing a message...</span>
       </div>
@@ -25,7 +25,7 @@
 <script>
 export default {
   name: 'ChatList',
-  props: ['isTyping', 'photo', 'name'],
+  props: ['isTyping', 'photo', 'name', 'messages', 'chat'],
   data () {
     return {
       isChatting: false
