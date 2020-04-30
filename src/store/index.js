@@ -40,7 +40,6 @@ export default new Vuex.Store({
   },
   actions: {
     fetchChats ({ commit }, uid) {
-      console.log(data)
       db.collection('chats').where('uid', '==', uid).onSnapshot(querySnapshot => {
         const data = []
         querySnapshot.forEach(doc => {
