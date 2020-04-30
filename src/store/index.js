@@ -23,14 +23,17 @@ export default new Vuex.Store({
     chats: [],
     messages: [],
     userInChat: {},
-    authUser: {}
+    authUser: null
   },
   mutations: {
     SET_AUTH_USER (state, data) {
       state.authUser = data
     },
+    SET_USER_IN_CHAT (state, data) {
+      state.userInChat = data
+    },
     DELETE_AUTH_USER (state) {
-      state.authUser = {}
+      state.authUser = null
     },
     FETCH_CHATS (state, data) {
       state.chats = data

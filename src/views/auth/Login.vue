@@ -19,6 +19,34 @@ export default {
         var token = result.credential.accessToken
         // The signed-in user info.
         var user = result.user
+        const {
+          displayName,
+          email,
+          emailVerified,
+          photoURL,
+          isAnonymous,
+          uid
+        } = user
+        const data = {
+          isTyping: false,
+          isLogin: true,
+          uid,
+          displayName,
+          email,
+          emailVerified,
+          photoURL,
+          isAnonymous,
+          lastTimeLogin: new Date()
+        }
+        this.$db.collection('users').doc(uid).set(data, { merge: true })
+        this.$db.collection('users').doc(uid).get()
+          .then(doc => {
+            const dataLogin = {
+              ...doc.data(),
+              roleChat: 'sender'
+            }
+            this.$store.commit('SET_AUTH_USER', dataLogin)
+          })
         // ...
         this.$router.push('/chat')
       })

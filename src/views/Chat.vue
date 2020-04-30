@@ -5,7 +5,7 @@
         <div class="photo notif-on">
           <img class="dot" src="@/assets/img/svg/dot.svg">
           <div class="img">
-            <img :src="authUser.photoURL">
+            <img :src="authUser !== null ? authUser.photoURL : ''">
           </div>
         </div>
       </header>
@@ -38,7 +38,7 @@
           <ChatList v-for="(chat, i) in chats" :key="i" :chat="chat"
                     @chat-click="selectChat"
                     :isTyping="false"
-                    :messages="chat.messages"/>
+                    :name="chat.displayName"/>
         </div>
         <button class="add-friend">+</button>
       </aside>
@@ -77,7 +77,7 @@
           </div>
           <form @submit.prevent="sendMessage" >
             <input type="text" placeholder="Type your message here"
-                   v-model="valueMessage">
+                   v-model="valueMessage" @keydown="typing">
             <button>
               <img src="@/assets/img/svg/send.svg">
             </button>
@@ -118,15 +118,19 @@ export default {
     ])
   },
   methods: {
+    typing () {
+      const data = {
+        isTyping: false
+      }
+      this.$db.collection('users').doc(this.authUser.uid).set(data, { merge: true })
+    },
     selectChat (chat) {
       this.currentChat = chat
       this.selectedChat = true
-      this.$db.collection('messages').orderBy('createdAt').onSnapshot(querySnapshot => {
+      this.$db.collection(`chats/${chat.id}/messages`).orderBy('createdAt').onSnapshot(querySnapshot => {
         const data = []
         querySnapshot.forEach(doc => {
-          chat.messages.forEach(message => {
-            if (message === doc.id) data.push(doc.data())
-          })
+          data.push(doc.data())
         })
         this.$store.commit('FETCH_MESSAGES', data)
       })
@@ -156,71 +160,18 @@ export default {
     sendMessage () {
       if (this.valueMessage === '') return
       else {
-        this.$db.collection('messages').add({
+        this.$db.collection(`chats/${this.currentChat.id}/messages`).add({
           uid: this.authUser.uid,
           name: this.authUser.displayName,
           content: this.valueMessage,
           photoURL: this.authUser.photoURL,
           createdAt: new Date()
         })
-          .then(message => {
-            const messages = this.currentChat.messages
-            messages.push(message.id)
-            this.$db.collection('chats').doc(this.currentChat.id).set({ messages }, { merge: true })
-          })
       }
-      // .then((docRef) => {
-      //   console.log('Document written with ID: ', docRef.id)
-      // })
-      // .catch((error) => {
-      //   console.error('Error adding document: ', error)
-      // })
       this.valueMessage = ''
     }
   },
   created () {
-    this.$firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        const {
-          displayName,
-          email,
-          emailVerified,
-          photoURL,
-          isAnonymous,
-          uid
-        } = user
-        const data = {
-          isTyping: false,
-          isLogin: true,
-          uid,
-          displayName,
-          email,
-          emailVerified,
-          photoURL,
-          isAnonymous,
-          lastTimeLogin: new Date()
-        }
-        this.$db.collection('users').doc(uid).set(data, { merge: true })
-        this.$store.dispatch('fetchAuthUser', uid)
-          .then(chats => {
-            this.$db.collection('chats').orderBy('chatAt').onSnapshot(querySnapshot => {
-              const data = []
-              querySnapshot.forEach(doc => {
-                chats.forEach(chat => {
-                  if (chat === doc.id) data.push({ id: doc.id, ...doc.data() })
-                })
-              })
-              this.$store.commit('FETCH_CHATS', data)
-            })
-          })
-      } else {
-        const { uid } = user
-        const data = {
-          isLogin: false
-        }
-        this.$db.collection('users').doc(uid).set(data, { merge: true })
-      }
-    })
   }
 }
 </script>

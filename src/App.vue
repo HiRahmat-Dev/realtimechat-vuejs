@@ -8,6 +8,60 @@
 export default {
   name: 'ChatApp',
   created () {
+    this.$firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        const {
+          displayName,
+          email,
+          emailVerified,
+          photoURL,
+          isAnonymous,
+          uid
+        } = user
+        const data = {
+          isTyping: false,
+          isLogin: true,
+          uid,
+          displayName,
+          email,
+          emailVerified,
+          photoURL,
+          isAnonymous,
+          lastTimeLogin: new Date()
+        }
+        this.$db.collection('users').doc(uid).set(data, { merge: true })
+        this.$db.collection('users').doc(uid).get()
+          .then(doc => {
+            const dataLogin = {
+              ...doc.data(),
+              roleChat: 'sender'
+            }
+            this.$store.commit('SET_AUTH_USER', dataLogin)
+            this.$db.collection('chats').orderBy('chatAt').onSnapshot(querySnapshot => {
+              const data = []
+              querySnapshot.forEach(doc => {
+                dataLogin.chats.forEach(chat => {
+                  if (chat === doc.id) data.push({ id: doc.id, ...doc.data() })
+                })
+              })
+              data[0].usersInChat.forEach(user => {
+                if (user.id !== uid) {
+                  this.$db.collection('users').doc(user.id).onSnapshot(doc => {
+                    this.$store.commit('SET_USER_IN_CHAT', doc.data())
+                  })
+                }
+              })
+              this.$store.commit('FETCH_CHATS', data)
+            })
+          })
+      } else {
+        const { uid } = user
+        const data = {
+          isLogin: false
+        }
+        this.$db.collection('users').doc(uid).set(data, { merge: true })
+      }
+    })
   }
 }
 </script>
