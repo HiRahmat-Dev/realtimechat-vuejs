@@ -3,15 +3,15 @@
        :class="{ active: isChatting }">
     <div class="photo">
       <div class="img">
-        <img :src="photo">
+        <img :src="photo || require('@/assets/img/sender.jpg')">
       </div>
     </div>
     <div class="chat-info">
       <div class="user-name">
-        <h4>{{ name }}</h4>
+        <h4>{{ name || 'Nama' }}</h4>
       </div>
       <div class="chat-flash">
-        <span v-show="!isTyping || false" >{{ !messages ? '' : messages[messages.length - 1].content }}</span>
+        <span v-show="!isTyping || false" >{{ !messages ? 'Isi pesan terbaru' : messages[messages.length - 1].content }}</span>
         <span class="typing"
               v-show="isTyping || false" >is typing a message...</span>
       </div>

@@ -22,6 +22,7 @@ export default new Vuex.Store({
   state: {
     chats: [],
     messages: [],
+    userInChat: {},
     authUser: {}
   },
   mutations: {
@@ -39,20 +40,40 @@ export default new Vuex.Store({
     }
   },
   actions: {
-    fetchChats ({ commit }, uid) {
-      db.collection('chats').where('uid', '==', uid).onSnapshot(querySnapshot => {
-        const data = []
-        querySnapshot.forEach(doc => {
-          data.push({ id: doc.id, ...doc.data() })
-        })
-        commit('FETCH_CHATS', data)
+    fetchAuthUser ({ commit }, uid) {
+      return new Promise(resolve => {
+        db.collection('users').doc(uid).get()
+          .then(doc => {
+            const dataLogin = {
+              ...doc.data(),
+              roleChat: 'sender'
+            }
+            commit('SET_AUTH_USER', dataLogin)
+            resolve(dataLogin.chats)
+          })
       })
     },
-    fetchMessages ({ commit }, chatId) {
-      db.collection('messages').where('chatId', '==', chatId).onSnapshot(querySnapshot => {
+    fetchChats ({ commit }, chats) {
+      return new Promise(resolve => {
+        db.collection('chats').orderBy('chatAt').onSnapshot(querySnapshot => {
+          const data = []
+          querySnapshot.forEach(doc => {
+            chats.forEach(chat => {
+              if (chat === doc.id) data.push({ id: doc.id, ...doc.data() })
+            })
+          })
+          commit('FETCH_CHATS', data)
+          resolve(data)
+        })
+      })
+    },
+    fetchMessages ({ commit }, messages) {
+      db.collection('messages').orderBy('createdAt').onSnapshot(querySnapshot => {
         const data = []
         querySnapshot.forEach(doc => {
-          data.push(doc.data())
+          messages.forEach(message => {
+            if (message === doc.id) data.push(doc.data())
+          })
         })
         commit('FETCH_MESSAGES', data)
       })

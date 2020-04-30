@@ -38,8 +38,6 @@
           <ChatList v-for="(chat, i) in chats" :key="i" :chat="chat"
                     @chat-click="selectChat"
                     :isTyping="false"
-                    :photo="chat.userSelected.photoURL"
-                    :name="chat.userSelected.displayName"
                     :messages="chat.messages"/>
         </div>
         <button class="add-friend">+</button>
@@ -53,7 +51,7 @@
         <header class="gap">
           <div class="user-info">
             <div class="user-name">
-              <h4>{{ currentChat.userSelected.displayName }}</h4>
+              <h4>{{ userInChat.displayName }}</h4>
             </div>
             <div class="chat-flash">
               <span v-show="true" >Last seen 2 hours ago</span>
@@ -71,7 +69,7 @@
                    :authUser="message.uid === authUser.uid"
                    :photo="message.photoURL"
                    :message="message.content"
-                   :time="message.createdAt"/>
+                   :time="timeFormat(message.createdAt)"/>
         </div>
         <div class="input-chat gap">
           <div class="attachment">
@@ -103,7 +101,6 @@ export default {
       optionMenu1: 3,
       valueMessage: '',
       currentChat: {},
-      currentChatId: '',
       selectedChat: false
     }
   },
@@ -116,14 +113,23 @@ export default {
     ...mapState([
       'chats',
       'authUser',
-      'messages'
+      'messages',
+      'userInChat'
     ])
   },
   methods: {
     selectChat (chat) {
-      this.$store.dispatch('fetchMessages', chat.id)
       this.currentChat = chat
       this.selectedChat = true
+      this.$db.collection('messages').orderBy('createdAt').onSnapshot(querySnapshot => {
+        const data = []
+        querySnapshot.forEach(doc => {
+          chat.messages.forEach(message => {
+            if (message === doc.id) data.push(doc.data())
+          })
+        })
+        this.$store.commit('FETCH_MESSAGES', data)
+      })
     },
     timeFormat (targetTime) {
       const target = targetTime.toDate()
@@ -151,13 +157,17 @@ export default {
       if (this.valueMessage === '') return
       else {
         this.$db.collection('messages').add({
-          chatId: this.currentChat.id,
           uid: this.authUser.uid,
           name: this.authUser.displayName,
           content: this.valueMessage,
           photoURL: this.authUser.photoURL,
           createdAt: new Date()
         })
+          .then(message => {
+            const messages = this.currentChat.messages
+            messages.push(message.id)
+            this.$db.collection('chats').doc(this.currentChat.id).set({ messages }, { merge: true })
+          })
       }
       // .then((docRef) => {
       //   console.log('Document written with ID: ', docRef.id)
@@ -190,9 +200,19 @@ export default {
           isAnonymous,
           lastTimeLogin: new Date()
         }
-        this.$db.collection('users').doc(uid).set(data)
-        this.$store.commit('SET_AUTH_USER', data)
-        this.$store.dispatch('fetchChats', uid)
+        this.$db.collection('users').doc(uid).set(data, { merge: true })
+        this.$store.dispatch('fetchAuthUser', uid)
+          .then(chats => {
+            this.$db.collection('chats').orderBy('chatAt').onSnapshot(querySnapshot => {
+              const data = []
+              querySnapshot.forEach(doc => {
+                chats.forEach(chat => {
+                  if (chat === doc.id) data.push({ id: doc.id, ...doc.data() })
+                })
+              })
+              this.$store.commit('FETCH_CHATS', data)
+            })
+          })
       } else {
         const { uid } = user
         const data = {
