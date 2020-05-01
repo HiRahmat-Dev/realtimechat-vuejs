@@ -38,7 +38,8 @@
           <ChatList v-for="(chat, i) in chats" :key="i" :chat="chat"
                     @chat-click="selectChat"
                     :isTyping="false"
-                    :name="currentChat.displayName"/>
+                    :name="chat.usersInChat.length === 0 ? '' : chat.usersInChat[0].displayName"
+                    :photo="chat.usersInChat.length === 0 ? '' : chat.usersInChat[0].photoURL"/>
         </div>
         <button class="add-friend">+</button>
       </aside>
@@ -51,7 +52,7 @@
         <header class="gap">
           <div class="user-info">
             <div class="user-name">
-              <h4>{{ userInChat.displayName }}</h4>
+              <h4>{{ userInChat.displayName === undefined ? '' : userInChat.displayName }}</h4>
             </div>
             <div class="chat-flash">
               <span v-show="userInChat.isLogin && !userInChat.isTyping" style="color: #66a56a;" >Online</span>

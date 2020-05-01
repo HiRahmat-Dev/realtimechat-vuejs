@@ -40,15 +40,23 @@ export default {
               const data = []
               querySnapshot.forEach(doc => {
                 dataLogin.chats.forEach(chat => {
-                  if (chat === doc.id) data.push({ id: doc.id, ...doc.data() })
+                  if (chat === doc.id) {
+                    const newUsersInChat = []
+                    doc.data().usersInChat.forEach(userInChat => {
+                      userInChat.onSnapshot(queryUserInChat => {
+                        if (queryUserInChat.data().uid !== uid) {
+                          newUsersInChat.push(queryUserInChat.data())
+                          this.$store.commit('SET_USER_IN_CHAT', queryUserInChat.data())
+                        }
+                      })
+                    })
+                    const dataChats = {
+                      chatAt: doc.data().chatAt,
+                      usersInChat: newUsersInChat
+                    }
+                    data.push({ id: doc.id, ...dataChats })
+                  }
                 })
-              })
-              data[0].usersInChat.forEach(user => {
-                if (user.id !== uid) {
-                  this.$db.collection('users').doc(user.id).onSnapshot(doc => {
-                    this.$store.commit('SET_USER_IN_CHAT', doc.data())
-                  })
-                }
               })
               this.$store.commit('FETCH_CHATS', data)
             })
