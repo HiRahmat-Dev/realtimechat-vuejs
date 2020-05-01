@@ -62,11 +62,8 @@ export default {
             })
           })
       } else {
-        const { uid } = user
-        const data = {
-          isLogin: false
-        }
-        this.$db.collection('users').doc(uid).set(data, { merge: true })
+        if (this.$route.name === 'Login') return
+        this.$router.push('/login')
       }
     })
   }

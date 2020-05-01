@@ -1,5 +1,5 @@
 <template>
-  <div @click="$emit('chat-click', chat)" class="chat-list gap"
+  <div v-if="name" @click="$emit('chat-click', chat)" class="chat-list gap"
        :class="{ active: isChatting }">
     <div class="photo">
       <div class="img">
@@ -11,9 +11,9 @@
         <h4>{{ name || 'Nama' }}</h4>
       </div>
       <div class="chat-flash">
-        <span v-show="!isTyping || false" >{{ !messages ? 'Isi pesan terbaru' : messages[messages.length - 1].content }}</span>
+        <span v-show="!isLogin" >Offline</span>
         <span class="typing"
-              v-show="isTyping || false" >is typing a message...</span>
+              v-show="isLogin" >Online</span>
       </div>
     </div>
     <div class="time-status">
@@ -25,7 +25,7 @@
 <script>
 export default {
   name: 'ChatList',
-  props: ['isTyping', 'photo', 'name', 'messages', 'chat'],
+  props: ['isLogin', 'photo', 'name', 'lastLogin', 'chat'],
   data () {
     return {
       isChatting: false

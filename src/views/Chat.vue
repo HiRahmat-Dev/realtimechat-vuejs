@@ -24,7 +24,7 @@
         </li>
       </ul>
       <ul class="option menu-2">
-        <li>
+        <li @click="logout" >
           <img src="@/assets/img/svg/logout.svg">
         </li>
       </ul>
@@ -37,9 +37,10 @@
         <div class="chat-list__wrapper">
           <ChatList v-for="(chat, i) in chats" :key="i" :chat="chat"
                     @chat-click="selectChat"
-                    :isTyping="false"
+                    :isLogin="chat.usersInChat.length === 0 ? '' : chat.usersInChat[0].isLogin"
                     :name="chat.usersInChat.length === 0 ? '' : chat.usersInChat[0].displayName"
-                    :photo="chat.usersInChat.length === 0 ? '' : chat.usersInChat[0].photoURL"/>
+                    :photo="chat.usersInChat.length === 0 ? '' : chat.usersInChat[0].photoURL"
+                    :lastLogin="chat.usersInChat.length === 0 ? '' : chat.usersInChat[0].lastTimeLogin"/>
         </div>
         <button class="add-friend">+</button>
       </aside>
@@ -175,6 +176,12 @@ export default {
         })
       }
       this.valueMessage = ''
+    },
+    logout () {
+      this.$db.collection('users').doc(this.authUser.uid).set({ isLogin: false }, { merge: true })
+      this.$db.collection('users').doc(this.authUser.uid).set({ lastTimeLogin: new Date() }, { merge: true })
+      this.$store.commit('LOGOUT')
+      this.$firebase.auth().signOut()
     }
   },
   created () {

@@ -40,6 +40,12 @@ export default new Vuex.Store({
     },
     FETCH_MESSAGES (state, data) {
       state.messages = data
+    },
+    LOGOUT (state) {
+      state.chats = []
+      state.messages = []
+      state.userInChat = {}
+      state.authUser = null
     }
   },
   actions: {
