@@ -33,8 +33,7 @@ export default {
         this.$db.collection('users').doc(uid).get()
           .then(doc => {
             const dataLogin = {
-              ...doc.data(),
-              roleChat: 'sender'
+              ...doc.data()
             }
             this.$store.commit('SET_AUTH_USER', dataLogin)
             this.$db.collection('chats').orderBy('chatAt').onSnapshot(querySnapshot => {

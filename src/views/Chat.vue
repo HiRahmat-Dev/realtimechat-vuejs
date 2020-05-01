@@ -54,8 +54,9 @@
               <h4>{{ userInChat.displayName }}</h4>
             </div>
             <div class="chat-flash">
-              <span v-show="true" >Last seen 2 hours ago</span>
-              <span v-show="false" class="typing">is typing a message...</span>
+              <span v-show="userInChat.isLogin" style="color: #66a56a;" >Online</span>
+              <span v-show="userInChat.isLogin && userInChat.isTyping" class="typing">is typing a message...</span>
+              <span v-show="!userInChat.isLogin" >Last seen {{ timeFormat(userInChat.lastTimeLogin) }}</span>
             </div>
           </div>
           <div class="button-optional">
@@ -120,7 +121,7 @@ export default {
   methods: {
     typing () {
       const data = {
-        isTyping: false
+        isTyping: true
       }
       this.$db.collection('users').doc(this.authUser.uid).set(data, { merge: true })
     },
