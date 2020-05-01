@@ -74,6 +74,8 @@ export default {
               this.$store.commit('FETCH_CHATS', data)
             })
           })
+        if (this.$route.name === 'Chat') return
+        this.$router.push('/chat')
       } else {
         if (this.$route.name === 'Login') return
         this.$store.commit('LOGOUT')
