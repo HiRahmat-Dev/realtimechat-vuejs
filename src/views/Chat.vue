@@ -38,7 +38,7 @@
           <ChatList v-for="(chat, i) in chats" :key="i" :chat="chat"
                     @chat-click="selectChat"
                     :isTyping="false"
-                    :name="chat.displayName"/>
+                    :name="currentChat.displayName"/>
         </div>
         <button class="add-friend">+</button>
       </aside>
@@ -54,7 +54,7 @@
               <h4>{{ userInChat.displayName }}</h4>
             </div>
             <div class="chat-flash">
-              <span v-show="userInChat.isLogin" style="color: #66a56a;" >Online</span>
+              <span v-show="userInChat.isLogin && !userInChat.isTyping" style="color: #66a56a;" >Online</span>
               <span v-show="userInChat.isLogin && userInChat.isTyping" class="typing">is typing a message...</span>
               <span v-show="!userInChat.isLogin" >Last seen {{ timeFormat(userInChat.lastTimeLogin) }}</span>
             </div>
@@ -70,7 +70,7 @@
                    :authUser="message.uid === authUser.uid"
                    :photo="message.photoURL"
                    :message="message.content"
-                   :time="timeFormat(message.createdAt)"/>
+                   :time="messages ? timeFormat(message.createdAt) : ''"/>
         </div>
         <div class="input-chat gap">
           <div class="attachment">
@@ -78,7 +78,7 @@
           </div>
           <form @submit.prevent="sendMessage" >
             <input type="text" placeholder="Type your message here"
-                   v-model="valueMessage" @keydown="typing">
+                   v-model="valueMessage" @keyup="typingOn">
             <button>
               <img src="@/assets/img/svg/send.svg">
             </button>
@@ -119,11 +119,14 @@ export default {
     ])
   },
   methods: {
-    typing () {
-      const data = {
-        isTyping: true
-      }
-      this.$db.collection('users').doc(this.authUser.uid).set(data, { merge: true })
+    typingOn () {
+      this.$db.collection('users').doc(this.authUser.uid).set({ isTyping: true }, { merge: true })
+      setTimeout(() => {
+        this.typingOff()
+      }, 2500)
+    },
+    typingOff () {
+      this.$db.collection('users').doc(this.authUser.uid).set({ isTyping: false }, { merge: true })
     },
     selectChat (chat) {
       this.currentChat = chat
@@ -161,6 +164,7 @@ export default {
     sendMessage () {
       if (this.valueMessage === '') return
       else {
+        this.typingOff()
         this.$db.collection(`chats/${this.currentChat.id}/messages`).add({
           uid: this.authUser.uid,
           name: this.authUser.displayName,
