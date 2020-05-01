@@ -1,11 +1,11 @@
 <template>
   <form @submit.prevent="$emit('submit-search', valueSearch)">
-    <input type="text"
+    <label for="search">
+      <img src="@/assets/img/svg/magnifying-glass.svg">
+    </label>
+    <input id="search" type="text"
            v-model="valueSearch"
            :placeholder="placeholder || 'Cari'">
-    <button>
-      <img src="@/assets/img/svg/magnifying-glass.svg">
-    </button>
   </form>
 </template>
 
@@ -38,12 +38,13 @@ input {
   border: none;
   outline: none;
 }
-button {
+label {
   position: absolute;
   left: 15px;
   border: none;
   background-color: transparent;
   cursor: pointer;
+  z-index: 1;
   img {
     width: 33px;
     object-fit: cover;

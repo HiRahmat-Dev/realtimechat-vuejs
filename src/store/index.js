@@ -20,12 +20,16 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
+    users: [],
     chats: [],
     messages: [],
     userInChat: {},
     authUser: null
   },
   mutations: {
+    SET_USERS (state, data) {
+      state.users = data
+    },
     SET_AUTH_USER (state, data) {
       state.authUser = data
     },
@@ -42,6 +46,7 @@ export default new Vuex.Store({
       state.messages = data
     },
     LOGOUT (state) {
+      state.users = []
       state.chats = []
       state.messages = []
       state.userInChat = {}

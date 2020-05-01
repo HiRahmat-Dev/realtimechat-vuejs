@@ -1,30 +1,26 @@
 <template>
-  <div v-if="name" @click="$emit('chat-click', chat)" class="chat-list gap"
-       :class="{ active: isChatting }">
+  <div @click="$emit('contact-click')" class="contact-list gap">
     <div class="photo">
       <div class="img">
         <img :src="photo || require('@/assets/img/sender.jpg')">
       </div>
     </div>
-    <div class="chat-info">
+    <div class="contact-info">
       <div class="user-name">
-        <h4>{{ name || 'Nama' }}</h4>
+        <h4>{{ name }}</h4>
       </div>
-      <div class="chat-flash">
+      <div class="contact-flash">
         <span v-show="!isLogin" >Offline</span>
         <span class="typing"
               v-show="isLogin" >Online</span>
       </div>
-    </div>
-    <div class="time-status">
-      <span>February 22</span>
     </div>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'ChatList',
+  name: 'ContactList',
   props: ['isLogin', 'photo', 'name', 'lastLogin', 'chat'],
   data () {
     return {
@@ -35,7 +31,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.chat-list {
+.contact-list {
   display: flex;
   align-items: center;
   color: rgb(114, 114, 114);
@@ -51,7 +47,7 @@ export default {
   &.active {
     background-color: rgba(152, 215, 156, 0.24);
   }
-  .chat-info {
+  .contact-info {
     display: flex;
     flex-direction: column;
     width: 220px;
@@ -66,7 +62,7 @@ export default {
         white-space: nowrap;
       }
     }
-    .chat-flash {
+    .contact-flash {
       height: 17px;
       font-size: 14px;
       overflow: hidden;
@@ -81,18 +77,6 @@ export default {
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-    }
-  }
-  .time-status {
-    width: auto;
-    overflow: hidden;
-    height: 45px;
-    display: flex;
-    margin-left: auto;
-    span {
-      margin-top: 2.5px;
-      font-size: 12px;
-      color: #9b9b9b;
     }
   }
 }

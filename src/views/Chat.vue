@@ -31,18 +31,41 @@
     </nav>
     <div class="body">
       <aside>
-        <header class="gap">
-          <SearchBox />
-        </header>
-        <div class="chat-list__wrapper">
-          <ChatList v-for="(chat, i) in chats" :key="i" :chat="chat"
-                    @chat-click="selectChat"
-                    :isLogin="chat.usersInChat.length === 0 ? '' : chat.usersInChat[0].isLogin"
-                    :name="chat.usersInChat.length === 0 ? '' : chat.usersInChat[0].displayName"
-                    :photo="chat.usersInChat.length === 0 ? '' : chat.usersInChat[0].photoURL"
-                    :lastLogin="chat.usersInChat.length === 0 ? '' : chat.usersInChat[0].lastTimeLogin"/>
+        <div class="contacts" :class="{ 'contacts-on': newChat }">
+          <header>
+            <div class="contacts-title gap">
+              <div>
+                <button @click="newChat = false">
+                  <img src="@/assets/img/svg/arrow-white.svg">
+                </button>
+                <h3>New Chat</h3>
+              </div>
+            </div>
+            <div class="search gap">
+              <SearchBox />
+            </div>
+          </header>
+          <div class="contact-list__wrapper">
+            <ContactList v-for="(contact, i) in users" :key="i"
+                         :isLogin="contact.isLogin"
+                         :name="contact.displayName"
+                         :photo="contact.photoURL"/>
+          </div>
         </div>
-        <button class="add-friend">+</button>
+        <div class="chats">
+          <header class="gap">
+            <SearchBox />
+          </header>
+          <div class="chat-list__wrapper">
+            <ChatList v-for="(chat, i) in chats" :key="i" :chat="chat"
+                      @chat-click="selectChat"
+                      :isLogin="chat.usersInChat.length === 0 ? '' : chat.usersInChat[0].isLogin"
+                      :name="chat.usersInChat.length === 0 ? '' : chat.usersInChat[0].displayName"
+                      :photo="chat.usersInChat.length === 0 ? '' : chat.usersInChat[0].photoURL"
+                      :lastLogin="chat.usersInChat.length === 0 ? '' : chat.usersInChat[0].lastTimeLogin"/>
+          </div>
+        </div>
+        <button @click="newChat = !newChat" class="add-friend" :class="{ 'add-friend__dissappear': newChat }">+</button>
       </aside>
       <main v-if="!selectedChat" class="chat-empty" >
         <h1>
@@ -93,6 +116,7 @@
 
 <script>
 import SearchBox from '@/components/SearchBox.vue'
+import ContactList from '@/components/ContactList.vue'
 import ChatList from '@/components/ChatList.vue'
 import Message from '@/components/Message.vue'
 import { mapState } from 'vuex'
@@ -104,16 +128,19 @@ export default {
       optionMenu1: 3,
       valueMessage: '',
       currentChat: {},
+      newChat: false,
       selectedChat: false
     }
   },
   components: {
     SearchBox,
+    ContactList,
     ChatList,
     Message
   },
   computed: {
     ...mapState([
+      'users',
       'chats',
       'authUser',
       'messages',
@@ -295,12 +322,73 @@ aside {
   position: relative;
   z-index: 1;
   background-color: white;
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.034);
+  header {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  .chats, .contacts {
+    background-color: white;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.034);
+  }
+  .contacts {
+    position: absolute;
+    width: 100%;
+    left: -100%;
+    z-index: 2;
+    transition: .3s;
+    header {
+      height: 25vh;
+      align-items: flex-start;
+      justify-content: flex-end;
+    }
+    .contacts-title {
+      background-color: #98D79C;
+      height: 100%;
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+      div {
+        display: flex;
+        align-items: center;
+        padding-bottom: 10px;
+        button {
+          outline: none;
+          border: none;
+          padding: 7px;
+          width: 40px;
+          height: 40px;
+          border-radius: 5px;
+          background-color: transparent;
+          cursor: pointer;
+          margin-right: 10px;
+          &:hover {
+            background-color: rgba(0, 0, 0, 0.050);
+          }
+          img {
+            height: 100%;
+          }
+        }
+      }
+      h3 {
+        margin-top: 3px;
+        color: white;
+      }
+    }
+    .search {
+      width: 100%;
+      padding-top: 15px;
+      padding-bottom: 15px;
+    }
+    &.contacts-on {
+      left: 0;
+    }
+  }
   button.add-friend {
     position: absolute;
     height: 50px;
     width: 50px;
-    border-radius: 50%;
+    border-radius: 5px;
     bottom: 25px;
     right: 25px;
     outline: none;
@@ -311,15 +399,31 @@ aside {
     font-size: 50px;
     font-weight: 300;
     cursor: pointer;
-    transition: .1s;
+    transform: rotate(0deg);
+    transition: transform .2s, visibility .3s, opacity .3s, border-radius .1s, box-shadow .3s;
+    z-index: 3;
     &:active {
       transform: translateY(3px);
+    }
+    &:hover {
+      box-shadow: 2px 6px 20px -3px rgb(152, 215, 156);
+      transform: translateY(-2px);
+    }
+    &.add-friend__dissappear {
+      opacity: 0;
+      border-radius: 50%;
+      transform: rotate(90deg);
+      visibility: hidden;
     }
   }
 }
 .chat-list__wrapper {
   overflow: auto;
   height: 86vh;
+}
+.contact-list__wrapper {
+  overflow: auto;
+  height: 75vh;
 }
 .gap {
   padding: 0 26px;

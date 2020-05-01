@@ -5,8 +5,11 @@
 </template>
 
 <script>
+
 export default {
   name: 'ChatApp',
+  computed: {
+  },
   created () {
     this.$firebase.auth().onAuthStateChanged(user => {
       if (user) {
@@ -30,6 +33,16 @@ export default {
           lastTimeLogin: new Date()
         }
         this.$db.collection('users').doc(uid).set(data, { merge: true })
+        this.$db.collection('users').onSnapshot(docs => {
+          const data = []
+          docs.docs.forEach(doc => {
+            // data.push(doc.data())
+            if (doc.uid !== uid) {
+              data.push(doc.data())
+            }
+          })
+          this.$store.commit('SET_USERS', data)
+        })
         this.$db.collection('users').doc(uid).get()
           .then(doc => {
             const dataLogin = {
@@ -63,6 +76,8 @@ export default {
           })
       } else {
         if (this.$route.name === 'Login') return
+        this.$store.commit('LOGOUT')
+        this.$firebase.auth().signOut()
         this.$router.push('/login')
       }
     })
