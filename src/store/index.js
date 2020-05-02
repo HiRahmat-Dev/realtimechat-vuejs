@@ -25,17 +25,19 @@ export default new Vuex.Store({
       state.authUser = null
     },
     FETCH_CHATS (state, data) {
+      const arrData = [data]
       let found = false
       for (let i = 0; i < state.chats.length; i++) {
         if (state.chats[i].id === data.id) {
+          const newChats = state.chats.map(obj => arrData.find(o => o.id === obj.id) || obj)
+          state.chats = newChats
           found = true
           break
         }
       }
-      if (found) {
-        return
+      if (!found) {
+        state.chats.push(data)
       }
-      state.chats.push(data)
     },
     FETCH_MESSAGES (state, data) {
       state.messages = data

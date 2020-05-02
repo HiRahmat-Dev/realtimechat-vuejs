@@ -270,13 +270,79 @@ export default {
       this.valueMessage = ''
     },
     logout () {
-      this.$db.collection('users').doc(this.authUser.uid).set({ isLogin: false }, { merge: true })
-      this.$db.collection('users').doc(this.authUser.uid).set({ lastTimeLogin: new Date() }, { merge: true })
-      this.$store.commit('LOGOUT')
-      this.$firebase.auth().signOut()
+      this.$db.collection('users').doc(this.authUser.uid).set({ isLogin: false, lastTimeLogin: new Date() }, { merge: true }).then(() => {
+        this.$firebase.auth().signOut().then(() => {
+          this.newChat = false
+          this.selectedChat = false
+          this.currentChat = {}
+          this.$store.commit('LOGOUT')
+        })
+      })
     }
   },
-  created () {
+  beforeRouteEnter (to, from, next) {
+    next(vm => {
+      vm.$firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+          const {
+            displayName,
+            email,
+            emailVerified,
+            photoURL,
+            isAnonymous,
+            uid
+          } = user
+          const data = {
+            isTyping: false,
+            isLogin: true,
+            uid,
+            displayName,
+            email,
+            emailVerified,
+            photoURL,
+            isAnonymous,
+            lastTimeLogin: new Date()
+          }
+          vm.$db.collection('users').doc(uid).set(data, { merge: true })
+
+          vm.$db.collection('users').onSnapshot(docs => {
+            const data = []
+            docs.docs.forEach(doc => {
+              if (doc.uid !== uid) {
+                data.push(doc.data())
+              }
+            })
+            vm.$store.commit('SET_USERS', data)
+          })
+
+          vm.$db.collection('users').doc(uid).onSnapshot(doc => {
+            vm.$store.commit('SET_AUTH_USER', doc.data())
+
+            doc.data().chats.forEach(chat => {
+              chat.onSnapshot(res => {
+                const chats = res
+                res.data().usersInChat.forEach(uic => {
+                  if (doc.data().uid !== uic.id) {
+                    uic.onSnapshot(res => {
+                      const chat = {
+                        id: chats.id,
+                        chatAt: chats.data().chatAt,
+                        userInChat: res.data()
+                      }
+                      vm.$store.commit('FETCH_CHATS', chat)
+                    })
+                  }
+                })
+              })
+            })
+          })
+          next()
+        } else {
+          vm.$store.commit('LOGOUT')
+          vm.$router.push('/login')
+        }
+      })
+    })
   }
 }
 </script>

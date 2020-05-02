@@ -7,75 +7,7 @@
 <script>
 
 export default {
-  name: 'ChatApp',
-  computed: {
-  },
-  beforeCreate () {
-    this.$firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        const {
-          displayName,
-          email,
-          emailVerified,
-          photoURL,
-          isAnonymous,
-          uid
-        } = user
-        const data = {
-          isTyping: false,
-          isLogin: true,
-          uid,
-          displayName,
-          email,
-          emailVerified,
-          photoURL,
-          isAnonymous,
-          lastTimeLogin: new Date()
-        }
-        this.$db.collection('users').doc(uid).set(data, { merge: true })
-
-        this.$db.collection('users').onSnapshot(docs => {
-          const data = []
-          docs.docs.forEach(doc => {
-            if (doc.uid !== uid) {
-              data.push(doc.data())
-            }
-          })
-          this.$store.commit('SET_USERS', data)
-        })
-
-        this.$db.collection('users').doc(uid).onSnapshot(doc => {
-          this.$store.commit('SET_AUTH_USER', doc.data())
-
-          doc.data().chats.forEach(chat => {
-            chat.onSnapshot(res => {
-              const chats = res
-              res.data().usersInChat.forEach(uic => {
-                if (doc.data().uid !== uic.id) {
-                  uic.onSnapshot(res => {
-                    const chat = {
-                      id: chats.id,
-                      chatAt: chats.data().chatAt,
-                      userInChat: res.data()
-                    }
-                    this.$store.commit('FETCH_CHATS', chat)
-                  })
-                }
-              })
-            })
-          })
-        })
-
-        if (this.$route.name === 'Chat') return
-        this.$router.push('/chat')
-      } else {
-        if (this.$route.name === 'Login') return
-        this.$store.commit('LOGOUT')
-        this.$firebase.auth().signOut()
-        this.$router.push('/login')
-      }
-    })
-  }
+  name: 'ChatApp'
 }
 </script>
 

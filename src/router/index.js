@@ -1,12 +1,15 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Chat from '../views/Chat.vue'
-// eslint-disable-next-line no-unused-vars
-import firebase from 'firebase'
+import Chat from '@/views/Chat.vue'
 
 Vue.use(VueRouter)
 
 const routes = [
+  {
+    path: '/',
+    name: 'Home',
+    component: () => import('@/views/Home.vue')
+  },
   {
     path: '/chat',
     name: 'Chat',
@@ -15,7 +18,7 @@ const routes = [
   {
     path: '/login',
     name: 'Login',
-    component: () => import('../views/auth/Login.vue')
+    component: () => import('@/views/auth/Login.vue')
   }
 ]
 
