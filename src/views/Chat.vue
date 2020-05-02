@@ -2,7 +2,7 @@
   <div class="chat">
     <nav @click="newChat = false" >
       <header>
-        <div class="photo notif-on">
+        <div class="photo notif-on" @click="modalOn = true, selfUserDetail = true">
           <img class="dot" src="@/assets/img/svg/dot.svg">
           <div class="img">
             <img :src="authUser !== null ? authUser.photoURL : ''">
@@ -82,7 +82,7 @@
       </main>
       <main @click="newChat = false" v-if="selectedChat" >
         <header class="gap">
-          <div class="user-info">
+          <div class="user-info" @click="modalOn = true, selfUserDetail = false">
             <div class="user-name">
               <h4>{{ userInChat.displayName }}</h4>
             </div>
@@ -119,6 +119,53 @@
         </div>
       </main>
     </div>
+    <Modal :class="{ 'modal-on': modalOn }" @close="modalOn = false"
+           modalWidth="500px">
+      <h3 v-if="selfUserDetail" slot="modal-head">User Info</h3>
+      <div slot="modal-body" v-if="selfUserDetail" class="user-detail__wrapper">
+        <div class="user-detail">
+          <div class="photo">
+            <div class="img">
+              <img :src="userInChat.photoURL || require('@/assets/img/sender.jpg')">
+            </div>
+          </div>
+          <div class="user-detail__info">
+            <div class="user-name">
+              <h4>{{ authUser.displayName || 'Nama' }}</h4>
+            </div>
+            <div class="user-detail__flash">
+              <span v-show="!userInChat.isLogin" >Last seen {{ userInChat.isLogin === undefined ? '' : timeFormat(userInChat.lastTimeLogin) }}</span>
+              <span class="typing"
+                    v-show="userInChat.isLogin && !userInChat.isTyping" >Online</span>
+              <span class="typing"
+                    v-show="userInChat.isLogin && userInChat.isTyping" >is typing a message...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <h3 v-if="!selfUserDetail" slot="modal-head">User Info</h3>
+      <div slot="modal-body" v-if="!selfUserDetail" class="user-detail__wrapper">
+        <div class="user-detail">
+          <div class="photo">
+            <div class="img">
+              <img :src="userInChat.photoURL || require('@/assets/img/sender.jpg')">
+            </div>
+          </div>
+          <div class="user-detail__info">
+            <div class="user-name">
+              <h4>{{ userInChat.displayName || 'Nama' }}</h4>
+            </div>
+            <div class="user-detail__flash">
+              <span v-show="!userInChat.isLogin" >Last seen {{ userInChat.isLogin === undefined ? '' : timeFormat(userInChat.lastTimeLogin) }}</span>
+              <span class="typing"
+                    v-show="userInChat.isLogin && !userInChat.isTyping" >Online</span>
+              <span class="typing"
+                    v-show="userInChat.isLogin && userInChat.isTyping" >is typing a message...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Modal>
   </div>
 </template>
 
@@ -127,6 +174,7 @@ import SearchBox from '@/components/SearchBox.vue'
 import ContactList from '@/components/ContactList.vue'
 import ChatList from '@/components/ChatList.vue'
 import Message from '@/components/Message.vue'
+import Modal from '@/components/Modal.vue'
 import { mapState } from 'vuex'
 
 export default {
@@ -137,14 +185,17 @@ export default {
       valueMessage: '',
       currentChat: {},
       newChat: false,
-      selectedChat: false
+      selectedChat: false,
+      modalOn: false,
+      selfUserDetail: false
     }
   },
   components: {
     SearchBox,
     ContactList,
     ChatList,
-    Message
+    Message,
+    Modal
   },
   computed: {
     ...mapState([
@@ -390,6 +441,7 @@ nav header {
   justify-content: center;
 }
 div.photo {
+  cursor: pointer;
   position: relative;
   .img {
     border-radius: 50%;
@@ -579,6 +631,7 @@ main {
   .user-info {
     display: flex;
     flex-direction: column;
+    cursor: pointer;
     .user-name {
       color: #505050;
     }
@@ -588,7 +641,6 @@ main {
       margin-top: 7px;
       position: relative;
       span {
-        width: 180px;
         position: absolute;
         top: 0;
         left: 0;
@@ -648,6 +700,25 @@ main {
           height: 37px;
         }
       }
+    }
+  }
+}
+.user-detail {
+  display: flex;
+  align-items: center;
+  color: rgb(114, 114, 114);
+  height: 70px;
+  .photo {
+    margin-right: 20px;
+  }
+  .user-detail__info {
+    color:rgb(86, 86, 86);
+  }
+  .user-detail__flash {
+    margin-top: 5px;
+    span {
+      color: rgb(114, 114, 114);
+      font-size: 14px;
     }
   }
 }
