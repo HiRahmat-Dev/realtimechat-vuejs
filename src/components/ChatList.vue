@@ -13,11 +13,10 @@
       <div class="chat-flash">
         <span v-show="!isLogin" >Offline</span>
         <span class="typing"
-              v-show="isLogin" >Online</span>
+              v-show="isLogin && !isTyping" >Online</span>
+        <span class="typing"
+              v-show="isLogin && isTyping" >is typing a message...</span>
       </div>
-    </div>
-    <div class="time-status">
-      <span>February 22</span>
     </div>
   </div>
 </template>
@@ -25,7 +24,7 @@
 <script>
 export default {
   name: 'ChatList',
-  props: ['isLogin', 'photo', 'name', 'lastLogin', 'chat'],
+  props: ['isLogin', 'isTyping', 'photo', 'name', 'lastLogin', 'chat'],
   data () {
     return {
       isChatting: false

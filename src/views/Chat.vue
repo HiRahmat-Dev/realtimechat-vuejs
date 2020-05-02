@@ -65,10 +65,11 @@
             <!-- Select Chat -->
             <ChatList v-for="(chat, i) in chats" :key="i" :chat="chat"
                       @chat-click="selectChat"
-                      :isLogin="chat.usersInChat.length === 0 ? '' : chat.usersInChat[0].isLogin"
-                      :name="chat.usersInChat.length === 0 ? '' : chat.usersInChat[0].displayName"
-                      :photo="chat.usersInChat.length === 0 ? '' : chat.usersInChat[0].photoURL"
-                      :lastLogin="chat.usersInChat.length === 0 ? '' : chat.usersInChat[0].lastTimeLogin"/>
+                      :isLogin="chat.userInChat.isLogin"
+                      :isTyping="chat.userInChat.isTyping"
+                      :name="chat.userInChat.length === 0 ? '' : chat.userInChat.displayName"
+                      :photo="chat.userInChat.length === 0 ? '' : chat.userInChat.photoURL"
+                      :lastLogin="chat.userInChat.length === 0 ? '' : chat.userInChat.lastTimeLogin"/>
 
           </div>
         </div>
@@ -83,12 +84,12 @@
         <header class="gap">
           <div class="user-info">
             <div class="user-name">
-              <h4>{{ currentChat.usersInChat[0].displayName }}</h4>
+              <h4>{{ userInChat.displayName }}</h4>
             </div>
             <div class="chat-flash">
-              <span v-show="currentChat.usersInChat[0].isLogin && !currentChat.usersInChat[0].isTyping" style="color: #66a56a;" >Online</span>
-              <span v-show="currentChat.usersInChat[0].isLogin && currentChat.usersInChat[0].isTyping" class="typing">is typing a message...</span>
-              <span v-show="!currentChat.usersInChat[0].isLogin" >Last seen {{ timeFormat(currentChat.usersInChat[0].lastTimeLogin) }}</span>
+              <span v-show="userInChat.isLogin && !userInChat.isTyping" class="typing" >Online</span>
+              <span v-show="userInChat.isLogin && userInChat.isTyping" class="typing">is typing a message...</span>
+              <span v-show="!userInChat.isLogin" >Last seen {{ timeFormat(userInChat.lastTimeLogin) }}</span>
             </div>
           </div>
           <div class="button-optional">
@@ -166,6 +167,9 @@ export default {
     },
     selectChat (chat) {
       this.currentChat = chat
+      this.$db.collection('users').doc(chat.userInChat.uid).onSnapshot(res => {
+        this.$store.commit('SET_USER_IN_CHAT', res.data())
+      })
       this.$db.collection(`chats/${chat.id}/messages`).orderBy('createdAt').onSnapshot(querySnapshot => {
         const data = []
         querySnapshot.forEach(doc => {
@@ -176,7 +180,6 @@ export default {
       })
     },
     selectNewChat (user) {
-      // console.log(user.chats)
       if (user.chats) {
         console.log('Sudah di chat')
         this.newChat = false
@@ -198,30 +201,30 @@ export default {
           let chatsUnAuth = []
           if (authUser.data().chats) {
             chatsAuth = authUser.data().chats
-            chatsAuth.push(result.id)
+            chatsAuth.push(this.$db.collection('chats').doc(result.id))
             console.log(chatsAuth)
             this.$db.collection('users').doc(authUser.id).set({ chats: chatsAuth }, { merge: true }).then(res => {
-              console.log('ChatId berhasil dipush ke authUser')
+              console.log('ChatIdRef berhasil dipush ke authUser')
             })
           } else {
-            chatsAuth.push(result.id)
+            chatsAuth.push(this.$db.collection('chats').doc(result.id))
             console.log(chatsAuth)
             this.$db.collection('users').doc(authUser.id).set({ chats: chatsAuth }, { merge: true }).then(res => {
-              console.log('ChatId berhasil ditulis ke authUser')
+              console.log('ChatIdRef berhasil ditulis ke authUser')
             })
           }
           if (unAuthUser.data().chats) {
             chatsUnAuth = unAuthUser.data().chats
-            chatsUnAuth.push(result.id)
+            chatsUnAuth.push(this.$db.collection('chats').doc(result.id))
             console.log(chatsUnAuth)
             this.$db.collection('users').doc(unAuthUser.id).set({ chats: chatsUnAuth }, { merge: true }).then(res => {
-              console.log('ChatId berhasil dipush ke unauthUser')
+              console.log('ChatIdRef berhasil dipush ke unauthUser')
             })
           } else {
-            chatsUnAuth.push(result.id)
+            chatsUnAuth.push(this.$db.collection('chats').doc(result.id))
             console.log(chatsUnAuth)
             this.$db.collection('users').doc(unAuthUser.id).set({ chats: chatsUnAuth }, { merge: true }).then(res => {
-              console.log('ChatId berhasil ditulis ke unauthUser')
+              console.log('ChatIdRef berhasil ditulis ke unauthUser')
             })
           }
         }).catch(err => {

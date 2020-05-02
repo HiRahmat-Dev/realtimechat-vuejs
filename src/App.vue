@@ -10,7 +10,7 @@ export default {
   name: 'ChatApp',
   computed: {
   },
-  created () {
+  beforeCreate () {
     this.$firebase.auth().onAuthStateChanged(user => {
       if (user) {
         const {
@@ -33,48 +33,39 @@ export default {
           lastTimeLogin: new Date()
         }
         this.$db.collection('users').doc(uid).set(data, { merge: true })
+
         this.$db.collection('users').onSnapshot(docs => {
           const data = []
           docs.docs.forEach(doc => {
-            // data.push(doc.data())
             if (doc.uid !== uid) {
               data.push(doc.data())
             }
           })
           this.$store.commit('SET_USERS', data)
         })
-        this.$db.collection('users').doc(uid).get()
-          .then(doc => {
-            const dataLogin = {
-              ...doc.data()
-            }
-            this.$store.commit('SET_AUTH_USER', dataLogin)
-            this.$db.collection('chats').orderBy('chatAt').onSnapshot(querySnapshot => {
-              const data = []
-              querySnapshot.forEach(doc => {
-                // console.log(doc.data())
-                dataLogin.chats.forEach(chat => {
-                  if (chat === doc.id) {
-                    const newUsersInChat = []
-                    doc.data().usersInChat.forEach(userInChat => {
-                      userInChat.onSnapshot(queryUserInChat => {
-                        if (queryUserInChat.data().uid !== uid) {
-                          newUsersInChat.push(queryUserInChat.data())
-                          this.$store.commit('SET_USER_IN_CHAT', queryUserInChat.data())
-                        }
-                      })
-                    })
-                    const dataChats = {
-                      chatAt: doc.data().chatAt,
-                      usersInChat: newUsersInChat
+
+        this.$db.collection('users').doc(uid).onSnapshot(doc => {
+          this.$store.commit('SET_AUTH_USER', doc.data())
+
+          doc.data().chats.forEach(chat => {
+            chat.onSnapshot(res => {
+              const chats = res
+              res.data().usersInChat.forEach(uic => {
+                if (doc.data().uid !== uic.id) {
+                  uic.onSnapshot(res => {
+                    const chat = {
+                      id: chats.id,
+                      chatAt: chats.data().chatAt,
+                      userInChat: res.data()
                     }
-                    data.push({ id: doc.id, ...dataChats })
-                  }
-                })
+                    this.$store.commit('FETCH_CHATS', chat)
+                  })
+                }
               })
-              this.$store.commit('FETCH_CHATS', data)
             })
           })
+        })
+
         if (this.$route.name === 'Chat') return
         this.$router.push('/chat')
       } else {

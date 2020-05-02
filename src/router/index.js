@@ -1,6 +1,8 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Chat from '../views/Chat.vue'
+// eslint-disable-next-line no-unused-vars
+import firebase from 'firebase'
 
 Vue.use(VueRouter)
 
