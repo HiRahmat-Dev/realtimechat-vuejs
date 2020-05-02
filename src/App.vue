@@ -52,6 +52,7 @@ export default {
             this.$db.collection('chats').orderBy('chatAt').onSnapshot(querySnapshot => {
               const data = []
               querySnapshot.forEach(doc => {
+                // console.log(doc.data())
                 dataLogin.chats.forEach(chat => {
                   if (chat === doc.id) {
                     const newUsersInChat = []

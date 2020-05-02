@@ -1,6 +1,6 @@
 <template>
-  <div class="home">
-    <nav>
+  <div class="chat">
+    <nav @click="newChat = false" >
       <header>
         <div class="photo notif-on">
           <img class="dot" src="@/assets/img/svg/dot.svg">
@@ -46,10 +46,14 @@
             </div>
           </header>
           <div class="contact-list__wrapper">
-            <ContactList v-for="(contact, i) in users" :key="i"
+
+            <!-- Select New Chat -->
+            <ContactList v-for="(contact, i) in users" :key="i" :user="contact"
+                         @contact-click="selectNewChat"
                          :isLogin="contact.isLogin"
                          :name="contact.displayName"
                          :photo="contact.photoURL"/>
+
           </div>
         </div>
         <div class="chats">
@@ -57,31 +61,34 @@
             <SearchBox />
           </header>
           <div class="chat-list__wrapper">
+
+            <!-- Select Chat -->
             <ChatList v-for="(chat, i) in chats" :key="i" :chat="chat"
                       @chat-click="selectChat"
                       :isLogin="chat.usersInChat.length === 0 ? '' : chat.usersInChat[0].isLogin"
                       :name="chat.usersInChat.length === 0 ? '' : chat.usersInChat[0].displayName"
                       :photo="chat.usersInChat.length === 0 ? '' : chat.usersInChat[0].photoURL"
                       :lastLogin="chat.usersInChat.length === 0 ? '' : chat.usersInChat[0].lastTimeLogin"/>
+
           </div>
         </div>
         <button @click="newChat = !newChat" class="add-friend" :class="{ 'add-friend__dissappear': newChat }">+</button>
       </aside>
-      <main v-if="!selectedChat" class="chat-empty" >
+      <main  @click="newChat = false" v-if="!selectedChat" class="chat-empty" >
         <h1>
           pilih chat untuk melanjutkan
         </h1>
       </main>
-      <main v-if="selectedChat" >
+      <main @click="newChat = false" v-if="selectedChat" >
         <header class="gap">
           <div class="user-info">
             <div class="user-name">
-              <h4>{{ userInChat.displayName === undefined ? '' : userInChat.displayName }}</h4>
+              <h4>{{ currentChat.usersInChat[0].displayName }}</h4>
             </div>
             <div class="chat-flash">
-              <span v-show="userInChat.isLogin && !userInChat.isTyping" style="color: #66a56a;" >Online</span>
-              <span v-show="userInChat.isLogin && userInChat.isTyping" class="typing">is typing a message...</span>
-              <span v-show="!userInChat.isLogin" >Last seen {{ timeFormat(userInChat.lastTimeLogin) }}</span>
+              <span v-show="currentChat.usersInChat[0].isLogin && !currentChat.usersInChat[0].isTyping" style="color: #66a56a;" >Online</span>
+              <span v-show="currentChat.usersInChat[0].isLogin && currentChat.usersInChat[0].isTyping" class="typing">is typing a message...</span>
+              <span v-show="!currentChat.usersInChat[0].isLogin" >Last seen {{ timeFormat(currentChat.usersInChat[0].lastTimeLogin) }}</span>
             </div>
           </div>
           <div class="button-optional">
@@ -159,14 +166,69 @@ export default {
     },
     selectChat (chat) {
       this.currentChat = chat
-      this.selectedChat = true
       this.$db.collection(`chats/${chat.id}/messages`).orderBy('createdAt').onSnapshot(querySnapshot => {
         const data = []
         querySnapshot.forEach(doc => {
           data.push(doc.data())
         })
         this.$store.commit('FETCH_MESSAGES', data)
+        this.selectedChat = true
       })
+    },
+    selectNewChat (user) {
+      // console.log(user.chats)
+      if (user.chats) {
+        console.log('Sudah di chat')
+        this.newChat = false
+      } else {
+        const newPC = {
+          chatAt: new Date(),
+          usersInChat: [
+            this.$db.collection('users').doc(this.authUser.uid), this.$db.collection('users').doc(user.uid)
+          ]
+        }
+        this.newChat = false
+        this.$db.collection('chats').add(newPC).then(async res => {
+          const result = await res.get()
+          // this.currentChat = result.data()
+          // this.selectedChat = true
+          const authUser = await this.$db.collection('users').doc(this.authUser.uid).get()
+          const unAuthUser = await this.$db.collection('users').doc(user.uid).get()
+          let chatsAuth = []
+          let chatsUnAuth = []
+          if (authUser.data().chats) {
+            chatsAuth = authUser.data().chats
+            chatsAuth.push(result.id)
+            console.log(chatsAuth)
+            this.$db.collection('users').doc(authUser.id).set({ chats: chatsAuth }, { merge: true }).then(res => {
+              console.log('ChatId berhasil dipush ke authUser')
+            })
+          } else {
+            chatsAuth.push(result.id)
+            console.log(chatsAuth)
+            this.$db.collection('users').doc(authUser.id).set({ chats: chatsAuth }, { merge: true }).then(res => {
+              console.log('ChatId berhasil ditulis ke authUser')
+            })
+          }
+          if (unAuthUser.data().chats) {
+            chatsUnAuth = unAuthUser.data().chats
+            chatsUnAuth.push(result.id)
+            console.log(chatsUnAuth)
+            this.$db.collection('users').doc(unAuthUser.id).set({ chats: chatsUnAuth }, { merge: true }).then(res => {
+              console.log('ChatId berhasil dipush ke unauthUser')
+            })
+          } else {
+            chatsUnAuth.push(result.id)
+            console.log(chatsUnAuth)
+            this.$db.collection('users').doc(unAuthUser.id).set({ chats: chatsUnAuth }, { merge: true }).then(res => {
+              console.log('ChatId berhasil ditulis ke unauthUser')
+            })
+          }
+        }).catch(err => {
+          console.log(err)
+        })
+        console.log(`uid dipilih: ${user.uid}\nuid sedang login: ${this.authUser.uid}`)
+      }
     },
     timeFormat (targetTime) {
       const target = targetTime.toDate()
@@ -217,7 +279,7 @@ export default {
 </script>
 
 <style lang="scss">
-.home {
+.chat {
   display: flex;
   width: 100vw;
   height: 100vh;

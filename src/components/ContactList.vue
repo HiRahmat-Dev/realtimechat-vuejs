@@ -1,5 +1,5 @@
 <template>
-  <div @click="$emit('contact-click')" class="contact-list gap">
+  <div @click="$emit('contact-click', user)" class="contact-list gap">
     <div class="photo">
       <div class="img">
         <img :src="photo || require('@/assets/img/sender.jpg')">
@@ -21,7 +21,7 @@
 <script>
 export default {
   name: 'ContactList',
-  props: ['isLogin', 'photo', 'name', 'lastLogin', 'chat'],
+  props: ['isLogin', 'photo', 'name', 'lastLogin', 'user'],
   data () {
     return {
       isChatting: false
