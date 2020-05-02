@@ -308,7 +308,7 @@ export default {
           vm.$db.collection('users').onSnapshot(docs => {
             const data = []
             docs.docs.forEach(doc => {
-              if (doc.uid !== uid) {
+              if (doc.id !== uid) {
                 data.push(doc.data())
               }
             })
