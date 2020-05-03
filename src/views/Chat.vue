@@ -80,7 +80,7 @@
         <button @click="newChat = !newChat" class="add-friend" :class="{ 'add-friend__dissappear': newChat }">+</button>
       </aside>
       <main  @click="newChat = false" v-if="!selectedChat" class="chat-empty" >
-        <img style="width: 400px; margin-top: 90px;" src="@/assets/img/svg/chat-doang.svg">
+        <img style="width: 400px; margin-top: 16vh;" src="@/assets/img/svg/chat-doang.svg">
         <h2 style="margin-top: 15px; margin-left: -45px; color: #b5b5b5;">
           pilih chat untuk melanjutkan
         </h2>
@@ -294,18 +294,7 @@ export default {
       this.chatOption = null
     },
     selectNewChat (user) {
-      const chatsId = []
-      const myChatsId = []
-      user.chats.forEach(chat => {
-        chatsId.push(chat.id)
-      })
-      this.authUser.chats.forEach(chat => {
-        myChatsId.push(chat.id)
-      })
-      const found = myChatsId.some(mci => chatsId.indexOf(mci) !== -1)
-      if (found) {
-        this.newChat = false
-      } else {
+      if (user.chats === undefined) {
         const newPC = {
           chatAt: new Date(),
           usersInChat: [
@@ -351,6 +340,65 @@ export default {
           console.log(err)
         })
         console.log(`uid dipilih: ${user.uid}\nuid sedang login: ${this.authUser.uid}`)
+      } else {
+        const chatsId = []
+        const myChatsId = []
+        user.chats.forEach(chat => {
+          chatsId.push(chat.id)
+        })
+        this.authUser.chats.forEach(chat => {
+          myChatsId.push(chat.id)
+        })
+        const found = myChatsId.some(mci => chatsId.indexOf(mci) !== -1)
+        if (found) {
+          this.newChat = false
+        } else {
+          const newPC = {
+            chatAt: new Date(),
+            usersInChat: [
+              this.$db.collection('users').doc(this.authUser.uid), this.$db.collection('users').doc(user.uid)
+            ]
+          }
+          this.$db.collection('chats').add(newPC).then(async res => {
+            this.newChat = false
+            const result = await res.get()
+            const authUser = await this.$db.collection('users').doc(this.authUser.uid).get()
+            const unAuthUser = await this.$db.collection('users').doc(user.uid).get()
+            let chatsAuth = []
+            let chatsUnAuth = []
+            if (authUser.data().chats) {
+              chatsAuth = authUser.data().chats
+              chatsAuth.push(this.$db.collection('chats').doc(result.id))
+              console.log(chatsAuth)
+              this.$db.collection('users').doc(authUser.id).set({ chats: chatsAuth }, { merge: true }).then(res => {
+                console.log('ChatIdRef berhasil dipush ke authUser')
+              })
+            } else {
+              chatsAuth.push(this.$db.collection('chats').doc(result.id))
+              console.log(chatsAuth)
+              this.$db.collection('users').doc(authUser.id).set({ chats: chatsAuth }, { merge: true }).then(res => {
+                console.log('ChatIdRef berhasil ditulis ke authUser')
+              })
+            }
+            if (unAuthUser.data().chats) {
+              chatsUnAuth = unAuthUser.data().chats
+              chatsUnAuth.push(this.$db.collection('chats').doc(result.id))
+              console.log(chatsUnAuth)
+              this.$db.collection('users').doc(unAuthUser.id).set({ chats: chatsUnAuth }, { merge: true }).then(res => {
+                console.log('ChatIdRef berhasil dipush ke unauthUser')
+              })
+            } else {
+              chatsUnAuth.push(this.$db.collection('chats').doc(result.id))
+              console.log(chatsUnAuth)
+              this.$db.collection('users').doc(unAuthUser.id).set({ chats: chatsUnAuth }, { merge: true }).then(res => {
+                console.log('ChatIdRef berhasil ditulis ke unauthUser')
+              })
+            }
+          }).catch(err => {
+            console.log(err)
+          })
+          console.log(`uid dipilih: ${user.uid}\nuid sedang login: ${this.authUser.uid}`)
+        }
       }
     },
     timeFormat (targetTime) {
@@ -376,8 +424,9 @@ export default {
       }
     },
     sendMessage () {
-      if (this.valueMessage === '') return
-      else {
+      if (this.valueMessage === '') {
+        return
+      } else {
         this.typingOff()
         this.$db.collection(`chats/${this.currentChat.id}/messages`).add({
           uid: this.authUser.uid,
