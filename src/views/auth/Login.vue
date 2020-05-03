@@ -1,6 +1,8 @@
 <template>
-  <div>
-    <button @click="login">Login with google account to continue</button>
+  <div class="login">
+    <div class="btn-login" @click="login">
+      <img src="@/assets/img/svg/chat-doang.svg">
+    </div>
   </div>
 </template>
 
@@ -59,14 +61,18 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-div {
+.login {
   width: 100%;
 }
-button {
-  display: block;
-  margin: 50px auto 0;
+.btn-login {
+  width: 300px;
+  margin: 100px auto 0;
   padding: 16px 25px;
   font-size: 20px;
   cursor: pointer;
+  img {
+    width: 100%;
+    object-fit: cover;
+  }
 }
 </style>
