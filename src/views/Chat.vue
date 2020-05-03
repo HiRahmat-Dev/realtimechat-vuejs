@@ -66,6 +66,9 @@
             <ChatList v-for="(chat, i) in chats" :key="i" :chat="chat"
                       :class="{ active: isChatting === chat.id }"
                       @chat-click="selectChat"
+                      @option-click="toggleOption"
+                      @deleteChat="deleteChat"
+                      :chatOption="chatOption"
                       :isLogin="chat.userInChat.isLogin"
                       :isTyping="chat.userInChat.isTyping"
                       :name="chat.userInChat.length === 0 ? '' : chat.userInChat.displayName"
@@ -77,9 +80,10 @@
         <button @click="newChat = !newChat" class="add-friend" :class="{ 'add-friend__dissappear': newChat }">+</button>
       </aside>
       <main  @click="newChat = false" v-if="!selectedChat" class="chat-empty" >
-        <h1>
+        <img style="width: 400px; margin-top: 90px;" src="@/assets/img/svg/chat-doang.svg">
+        <h2 style="margin-top: 15px; margin-left: -45px; color: #b5b5b5;">
           pilih chat untuk melanjutkan
-        </h1>
+        </h2>
       </main>
       <main @click="newChat = false" v-if="selectedChat" >
         <header class="gap">
@@ -228,7 +232,8 @@ export default {
       selectedChat: false,
       modalOn: false,
       selfUserDetail: false,
-      isChatting: null
+      isChatting: null,
+      chatOption: null
     }
   },
   components: {
@@ -248,6 +253,10 @@ export default {
     ])
   },
   methods: {
+    toggleOption (chat) {
+      if (this.chatOption === chat.id) this.chatOption = null
+      else this.chatOption = chat.id
+    },
     fetchLiveLocation () {
       const authId = this.authUser.uid
       this.$getLocation({})
@@ -278,6 +287,11 @@ export default {
         this.selectedChat = true
         this.isChatting = chat.id
       })
+    },
+    deleteChat (chat) {
+      console.log('id chat: ' + chat.id)
+      console.log('user: ' + chat.userInChat)
+      this.chatOption = null
     },
     selectNewChat (user) {
       const chatsId = []
@@ -689,7 +703,6 @@ main {
     width: 100%;
     height: 100%;
     display: flex;
-    justify-content: center;
     align-items: center;
   }
   header, .button-optional {

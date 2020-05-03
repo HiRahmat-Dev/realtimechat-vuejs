@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="679.402" height="396" viewBox="0 0 679.402 396">
+  <g id="chat-doang" transform="translate(-108.598 -1850)">
+    <g id="Group_17" data-name="Group 17">
+      <text id="Chat" transform="matrix(0.998, -0.07, 0.07, 0.998, 118.643, 2067.959)" fill="#98d79c" font-size="167" font-family="CHIBOLDdemo, CHIBOLD demo"><tspan x="0" y="0">Chat</tspan></text>
+      <text id="Doang" transform="translate(127 2220)" fill="#98d79c" font-size="167" font-family="CHIBOLDdemo, CHIBOLD demo"><tspan x="0" y="0">Doang</tspan></text>
+      <g id="Group_16" data-name="Group 16" transform="translate(-25 4)">
+        <path id="Path_13" data-name="Path 13" d="M85.5,0A85.5,85.5,0,0,1,171,85.5" transform="translate(540 1941)" fill="none" stroke="#98d79c" stroke-linecap="round" stroke-width="34"/>
+        <path id="Path_14" data-name="Path 14" d="M85.5,0c81.807,0,148.124,64.334,148.124,143.694" transform="translate(540 1882.806)" fill="none" stroke="#98d79c" stroke-linecap="round" stroke-width="34"/>
+        <circle id="Ellipse_11" data-name="Ellipse 11" cx="32.5" cy="32.5" r="32.5" transform="translate(603 1984)" fill="#98d79c"/>
+      </g>
+    </g>
+    <rect id="Rectangle_39" data-name="Rectangle 39" width="679" height="386" transform="translate(109 1850)" fill="none"/>
+  </g>
+</svg>
