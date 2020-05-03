@@ -1,6 +1,5 @@
 <template>
   <div>
-    Halaman Home
   </div>
 </template>
 

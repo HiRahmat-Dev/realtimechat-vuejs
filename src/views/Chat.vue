@@ -64,6 +64,7 @@
 
             <!-- Select Chat -->
             <ChatList v-for="(chat, i) in chats" :key="i" :chat="chat"
+                      :class="{ active: isChatting === chat.id }"
                       @chat-click="selectChat"
                       :isLogin="chat.userInChat.isLogin"
                       :isTyping="chat.userInChat.isTyping"
@@ -121,12 +122,19 @@
     </div>
     <Modal :class="{ 'modal-on': modalOn }" @close="modalOn = false"
            modalWidth="500px">
-      <h3 v-if="selfUserDetail" slot="modal-head">User Info</h3>
+      <div v-if="selfUserDetail" class="modal-head__slot" slot="modal-head">
+        <h3>User Info</h3>
+        <div class="button-optional">
+          <img src="@/assets/img/svg/phone.svg">
+          <img src="@/assets/img/svg/camera.svg">
+          <img src="@/assets/img/svg/menu-dot.svg">
+        </div>
+      </div>
       <div slot="modal-body" v-if="selfUserDetail" class="user-detail__wrapper">
         <div class="user-detail">
           <div class="photo">
             <div class="img">
-              <img :src="userInChat.photoURL || require('@/assets/img/sender.jpg')">
+              <img :src="authUser.photoURL || require('@/assets/img/sender.jpg')">
             </div>
           </div>
           <div class="user-detail__info">
@@ -134,17 +142,38 @@
               <h4>{{ authUser.displayName || 'Nama' }}</h4>
             </div>
             <div class="user-detail__flash">
-              <span v-show="!userInChat.isLogin" >Last seen {{ userInChat.isLogin === undefined ? '' : timeFormat(userInChat.lastTimeLogin) }}</span>
+              <span v-show="!authUser.isLogin" >Last seen {{ authUser.isLogin === undefined ? '' : timeFormat(authUser.lastTimeLogin) }}</span>
               <span class="typing"
-                    v-show="userInChat.isLogin && !userInChat.isTyping" >Online</span>
+                    v-show="authUser.isLogin && !authUser.isTyping" >Online</span>
               <span class="typing"
-                    v-show="userInChat.isLogin && userInChat.isTyping" >is typing a message...</span>
+                    v-show="authUser.isLogin && authUser.isTyping" >is typing a message...</span>
             </div>
           </div>
         </div>
+        <div class="email">
+          <p>{{ authUser.email }}</p>
+        </div>
+        <div class="gmap" >
+          <h3>Location</h3>
+          <div class="position">
+            <p>Latitude: {{ authUser.coords.latitude }}</p>
+            <p>Longitude: {{ authUser.coords.longitude }}</p>
+          </div>
+          <GmapMap :center="{lat: 10, lng: 10}"
+                  :zoom="7"
+                  style="width: 100%; height: 300px;">
+          </GmapMap>
+        </div>
       </div>
-      <h3 v-if="!selfUserDetail" slot="modal-head">User Info</h3>
-      <div slot="modal-body" v-if="!selfUserDetail" class="user-detail__wrapper">
+      <div v-if="!selfUserDetail" class="modal-head__slot" slot="modal-head">
+        <h3>User Info</h3>
+        <div class="button-optional">
+          <img src="@/assets/img/svg/phone.svg">
+          <img src="@/assets/img/svg/camera.svg">
+          <img src="@/assets/img/svg/menu-dot.svg">
+        </div>
+      </div>
+      <div slot="modal-body" v-if="!selfUserDetail && userInChat.displayName !== undefined" class="user-detail__wrapper">
         <div class="user-detail">
           <div class="photo">
             <div class="img">
@@ -163,6 +192,17 @@
                     v-show="userInChat.isLogin && userInChat.isTyping" >is typing a message...</span>
             </div>
           </div>
+        </div>
+        <div class="gmap" >
+          <h3>Location</h3>
+          <div class="position">
+            <p>Latitude: {{ userInChat.coords.latitude }}</p>
+            <p>Longitude: {{ userInChat.coords.longitude }}</p>
+          </div>
+          <GmapMap :center="{lat: 10, lng: 10}"
+                  :zoom="7"
+                  style="width: 100%; height: 300px;">
+          </GmapMap>
         </div>
       </div>
     </Modal>
@@ -187,7 +227,8 @@ export default {
       newChat: false,
       selectedChat: false,
       modalOn: false,
-      selfUserDetail: false
+      selfUserDetail: false,
+      isChatting: null
     }
   },
   components: {
@@ -207,6 +248,13 @@ export default {
     ])
   },
   methods: {
+    fetchLiveLocation () {
+      const authId = this.authUser.uid
+      this.$getLocation({})
+        .then(coords => {
+          this.$db.collection('users').doc(authId).update({ coords: new this.$firebase.firestore.GeoPoint(coords.lat, coords.lng) })
+        })
+    },
     typingOn () {
       this.$db.collection('users').doc(this.authUser.uid).set({ isTyping: true }, { merge: true })
       setTimeout(() => {
@@ -228,11 +276,20 @@ export default {
         })
         this.$store.commit('FETCH_MESSAGES', data)
         this.selectedChat = true
+        this.isChatting = chat.id
       })
     },
     selectNewChat (user) {
-      if (user.chats) {
-        console.log('Sudah di chat')
+      const chatsId = []
+      const myChatsId = []
+      user.chats.forEach(chat => {
+        chatsId.push(chat.id)
+      })
+      this.authUser.chats.forEach(chat => {
+        myChatsId.push(chat.id)
+      })
+      const found = myChatsId.some(mci => chatsId.indexOf(mci) !== -1)
+      if (found) {
         this.newChat = false
       } else {
         const newPC = {
@@ -241,11 +298,9 @@ export default {
             this.$db.collection('users').doc(this.authUser.uid), this.$db.collection('users').doc(user.uid)
           ]
         }
-        this.newChat = false
         this.$db.collection('chats').add(newPC).then(async res => {
+          this.newChat = false
           const result = await res.get()
-          // this.currentChat = result.data()
-          // this.selectedChat = true
           const authUser = await this.$db.collection('users').doc(this.authUser.uid).get()
           const unAuthUser = await this.$db.collection('users').doc(user.uid).get()
           let chatsAuth = []
@@ -299,7 +354,7 @@ export default {
       } else if (elapsedTime < msPerHour) {
         return Math.round(elapsedTime / msPerMinute) + ' minutes ago'
       } else if (elapsedTime < msPerDay) {
-        return Math.round(elapsedTime / msPerHour) + ' hours ago'
+        return days[target.getDay()] + ' at ' + target.getHours() + ':' + target.getMinutes()
       } else if (elapsedTime < msPerMonth) {
         return days[target.getDay()] + ' at ' + target.getHours() + ':' + target.getMinutes()
       } else if (elapsedTime < msPerYear) {
@@ -331,10 +386,18 @@ export default {
       })
     }
   },
+  created () {
+    setTimeout(() => {
+      setInterval(() => {
+        this.fetchLiveLocation()
+      }, 30000)
+    }, 3000)
+  },
   beforeRouteEnter (to, from, next) {
     next(vm => {
-      vm.$firebase.auth().onAuthStateChanged(user => {
+      vm.$firebase.auth().onAuthStateChanged(async user => {
         if (user) {
+          const coords = await vm.$getLocation({})
           const {
             displayName,
             email,
@@ -346,6 +409,7 @@ export default {
           const data = {
             isTyping: false,
             isLogin: true,
+            coords: new vm.$firebase.firestore.GeoPoint(coords.lat, coords.lng),
             uid,
             displayName,
             email,
@@ -475,6 +539,9 @@ nav {
     border-radius: 4px;
     overflow: hidden;
     cursor: pointer;
+    &:hover {
+      background-color: rgba(152, 215, 156, 0.108);
+    }
     &::after {
       content: '';
       position: absolute;
@@ -485,6 +552,9 @@ nav {
       left: 0;
     }
     &.active {
+      &:hover {
+        background-color: rgba(152, 215, 156, 0);
+      }
       &::after {
         background-color: rgba(152, 215, 156, 0.24);
       }
@@ -703,6 +773,24 @@ main {
     }
   }
 }
+.modal-head__slot {
+  display: flex;
+  align-items: center;
+  .button-optional {
+    margin-left: auto;
+    img {
+      margin-left: 5px;
+      cursor: pointer;
+      width: 50px;
+      padding: 10px;
+    }
+  }
+}
+.user-detail__wrapper {
+  p {
+    color:rgb(114, 114, 114);
+  }
+}
 .user-detail {
   display: flex;
   align-items: center;
@@ -717,8 +805,27 @@ main {
   .user-detail__flash {
     margin-top: 5px;
     span {
-      color: rgb(114, 114, 114);
       font-size: 14px;
+    }
+  }
+}
+.email {
+  padding: 30px 0 20px;
+}
+.gmap {
+  margin: 20px 0;
+  .vue-map-container {
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  h3 {
+    margin-bottom: 15px;
+  }
+  .position {
+    display: flex;
+    margin-bottom: 10px;
+    p:last-child {
+      margin-left: 20px;
     }
   }
 }

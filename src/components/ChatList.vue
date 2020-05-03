@@ -1,6 +1,5 @@
 <template>
-  <div v-if="name" @click="$emit('chat-click', chat)" class="chat-list gap"
-       :class="{ active: isChatting }">
+  <div v-if="name" @click="$emit('chat-click', chat)" class="chat-list gap">
     <div class="photo">
       <div class="img">
         <img :src="photo || require('@/assets/img/sender.jpg')">
@@ -27,7 +26,6 @@ export default {
   props: ['isLogin', 'isTyping', 'photo', 'name', 'lastLogin', 'chat'],
   data () {
     return {
-      isChatting: false
     }
   }
 }
@@ -42,7 +40,7 @@ export default {
   border-bottom: 1px solid rgba(152, 215, 156, 0.24);
   cursor: pointer;
   &:hover {
-    background-color: rgba(152, 215, 156, 0.24);
+    background-color: rgba(152, 215, 156, 0.108);
   }
   &:last-child {
     border: none;

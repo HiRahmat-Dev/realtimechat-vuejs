@@ -3,6 +3,8 @@ import App from '@/App.vue'
 import router from '@/router'
 import store from '@/store'
 import firebase from 'firebase'
+import VueGeoLocation from 'vue-browser-geolocation'
+import * as VueGoogleMaps from 'vue2-google-maps'
 
 // Required for side-effects
 import 'firebase/firestore'
@@ -22,6 +24,14 @@ Vue.prototype.$db = firebase.firestore()
 Vue.prototype.$firebase = firebase
 
 Vue.config.productionTip = false
+
+Vue.use(VueGeoLocation)
+const options = {
+  load: {
+    key: 'AIzaSyB_jrhMU1l0ARnqML1tTX7tXMNGMAVBdTY'
+  }
+}
+Vue.use(VueGoogleMaps, options)
 
 new Vue({
   router,

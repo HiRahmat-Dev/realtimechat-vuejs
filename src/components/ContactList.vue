@@ -39,7 +39,7 @@ export default {
   border-bottom: 1px solid rgba(152, 215, 156, 0.24);
   cursor: pointer;
   &:hover {
-    background-color: rgba(152, 215, 156, 0.24);
+    background-color: rgba(152, 215, 156, 0.108);
   }
   &:last-child {
     border: none;
