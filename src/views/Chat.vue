@@ -370,9 +370,13 @@ export default {
         user.chats.forEach(chat => {
           chatsId.push(chat.id)
         })
-        this.authUser.chats.forEach(chat => {
-          myChatsId.push(chat.id)
-        })
+        if (this.authUser.chats === undefined) {
+          this.$db.collection('users').doc(this.authUser.uid).update({ chats: [] })
+        } else {
+          this.authUser.chats.forEach(chat => {
+            myChatsId.push(chat.id)
+          })
+        }
         const found = myChatsId.some(mci => chatsId.indexOf(mci) !== -1)
         if (found) {
           this.newChat = false
