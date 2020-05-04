@@ -135,9 +135,13 @@
         </div>
       </div>
       <div slot="modal-body" v-if="selfUserDetail" class="user-detail__wrapper">
-        <div class="user-detail">
+        <div class="user-detail editable">
           <div class="photo">
             <div class="img">
+              <div class="edit-photo">
+                <input type="file" @change="uploadPhoto($event)">
+                <img src="@/assets/img/svg/upload-photo.svg">
+              </div>
               <img :src="authUser.photoURL || require('@/assets/img/sender.jpg')">
             </div>
           </div>
@@ -253,6 +257,26 @@ export default {
     ])
   },
   methods: {
+    uploadPhoto (e) {
+      const d = new Date()
+      const nameDate = d.getTime().toString()
+      const file = e.target.files[0]
+      // eslint-disable-next-line no-unused-vars
+      const fileName = nameDate + '-' + file.name.split(' ').join('')
+      const storageRef = this.$firebase.storage().ref()
+      // eslint-disable-next-line quotes
+      const uploadTask = storageRef.child(`photo-profile/${fileName}`).put(file)
+      uploadTask.on('state_changed', snapshot => {
+        console.log('progress:' + ((snapshot.bytesTransferred / snapshot.totalBytes) * 100) + '%')
+      }, err => {
+        console.log(err)
+      }, () => {
+        uploadTask.snapshot.ref.getDownloadURL().then(url => {
+          const authUserRef = this.$db.collection('users').doc(this.authUser.uid)
+          authUserRef.update({ photoURL: url })
+        })
+      })
+    },
     toggleOption (chat) {
       if (this.chatOption === chat.id) this.chatOption = null
       else this.chatOption = chat.id
@@ -460,6 +484,9 @@ export default {
     next(vm => {
       vm.$firebase.auth().onAuthStateChanged(async user => {
         if (user) {
+          // eslint-disable-next-line no-unused-vars
+          let defPhotoURL = 'https://firebasestorage.googleapis.com/v0/b/chat-doang.appspot.com/o/photo-profile%2Fdefault_profile.png?alt=media&token=8928db90-49d0-4c35-a6d8-d964a16d3ce6'
+          if (user.providerData[0].providerId === 'google.com') defPhotoURL = null
           const coords = await vm.$getLocation({})
           const {
             displayName,
@@ -469,17 +496,33 @@ export default {
             isAnonymous,
             uid
           } = user
-          const data = {
-            isTyping: false,
-            isLogin: true,
-            coords: new vm.$firebase.firestore.GeoPoint(coords.lat, coords.lng),
-            uid,
-            displayName,
-            email,
-            emailVerified,
-            photoURL,
-            isAnonymous,
-            lastTimeLogin: new Date()
+          let data = {}
+          const currentAuthUser = await vm.$db.collection('users').doc(uid).get()
+          if (!currentAuthUser.exists) {
+            data = {
+              isTyping: false,
+              isLogin: true,
+              coords: new vm.$firebase.firestore.GeoPoint(coords.lat, coords.lng),
+              uid,
+              displayName,
+              email,
+              emailVerified,
+              photoURL: defPhotoURL || photoURL,
+              isAnonymous,
+              lastTimeLogin: new Date()
+            }
+          } else {
+            data = {
+              isTyping: false,
+              isLogin: true,
+              coords: new vm.$firebase.firestore.GeoPoint(coords.lat, coords.lng),
+              uid,
+              displayName,
+              email,
+              emailVerified,
+              isAnonymous,
+              lastTimeLogin: new Date()
+            }
           }
           vm.$db.collection('users').doc(uid).set(data, { merge: true })
 
@@ -868,6 +911,42 @@ main {
     margin-top: 5px;
     span {
       font-size: 14px;
+    }
+  }
+  &.editable {
+    .photo {
+      .img {
+        position: relative;
+        width: 70px;
+        height: 70px;
+      }
+    }
+    .edit-photo {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -100%;
+      height: 35%;
+      background-color: rgba(0, 0, 0, 0.428);
+      transition: .2s;
+      img {
+        height: 14px;
+        object-fit: contain;
+        display: block;
+        margin: 5px auto 0;
+        box-sizing: border-box;
+      }
+      input {
+        opacity: 0;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+      }
+    }
+    .photo:hover {
+      .edit-photo {
+        bottom: 0;
+      }
     }
   }
 }
