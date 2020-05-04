@@ -370,9 +370,13 @@ export default {
         user.chats.forEach(chat => {
           chatsId.push(chat.id)
         })
-        this.authUser.chats.forEach(chat => {
-          myChatsId.push(chat.id)
-        })
+        if (this.authUser.chats === undefined) {
+          this.$db.collection('users').doc(this.authUser.uid).update({ chats: [] })
+        } else {
+          this.authUser.chats.forEach(chat => {
+            myChatsId.push(chat.id)
+          })
+        }
         const found = myChatsId.some(mci => chatsId.indexOf(mci) !== -1)
         if (found) {
           this.newChat = false
@@ -487,77 +491,148 @@ export default {
           // eslint-disable-next-line no-unused-vars
           let defPhotoURL = 'https://firebasestorage.googleapis.com/v0/b/chat-doang.appspot.com/o/photo-profile%2Fdefault_profile.png?alt=media&token=8928db90-49d0-4c35-a6d8-d964a16d3ce6'
           if (user.providerData[0].providerId === 'google.com') defPhotoURL = null
-          const coords = await vm.$getLocation({})
-          const {
-            displayName,
-            email,
-            emailVerified,
-            photoURL,
-            isAnonymous,
-            uid
-          } = user
-          let data = {}
-          const currentAuthUser = await vm.$db.collection('users').doc(uid).get()
-          if (!currentAuthUser.exists) {
-            data = {
-              isTyping: false,
-              isLogin: true,
-              coords: new vm.$firebase.firestore.GeoPoint(coords.lat, coords.lng),
-              uid,
+          vm.$getLocation({}).then(async coords => {
+            const {
               displayName,
               email,
               emailVerified,
-              photoURL: defPhotoURL || photoURL,
+              photoURL,
               isAnonymous,
-              lastTimeLogin: new Date()
-            }
-          } else {
-            data = {
-              isTyping: false,
-              isLogin: true,
-              coords: new vm.$firebase.firestore.GeoPoint(coords.lat, coords.lng),
-              uid,
-              displayName,
-              email,
-              emailVerified,
-              isAnonymous,
-              lastTimeLogin: new Date()
-            }
-          }
-          vm.$db.collection('users').doc(uid).set(data, { merge: true })
-
-          vm.$db.collection('users').onSnapshot(docs => {
-            const data = []
-            docs.docs.forEach(doc => {
-              if (doc.id !== uid) {
-                data.push(doc.data())
+              uid
+            } = user
+            let data = {}
+            const currentAuthUser = await vm.$db.collection('users').doc(uid).get()
+            if (!currentAuthUser.exists) {
+              data = {
+                isTyping: false,
+                isLogin: true,
+                coords: new vm.$firebase.firestore.GeoPoint(coords.lat || 1, coords.lng || 1),
+                uid,
+                displayName,
+                email,
+                emailVerified,
+                photoURL: defPhotoURL || photoURL,
+                isAnonymous,
+                lastTimeLogin: new Date()
               }
+            } else {
+              data = {
+                isTyping: false,
+                isLogin: true,
+                coords: new vm.$firebase.firestore.GeoPoint(coords.lat || 1, coords.lng || 1),
+                uid,
+                displayName,
+                email,
+                emailVerified,
+                isAnonymous,
+                lastTimeLogin: new Date()
+              }
+            }
+            vm.$db.collection('users').doc(uid).set(data, { merge: true })
+
+            vm.$db.collection('users').onSnapshot(docs => {
+              const data = []
+              docs.docs.forEach(doc => {
+                if (doc.id !== uid) {
+                  data.push(doc.data())
+                }
+              })
+              vm.$store.commit('SET_USERS', data)
             })
-            vm.$store.commit('SET_USERS', data)
-          })
 
-          vm.$db.collection('users').doc(uid).onSnapshot(doc => {
-            vm.$store.commit('SET_AUTH_USER', doc.data())
+            vm.$db.collection('users').doc(uid).onSnapshot(doc => {
+              vm.$store.commit('SET_AUTH_USER', doc.data())
 
-            doc.data().chats.forEach(chat => {
-              chat.onSnapshot(res => {
-                const chats = res
-                res.data().usersInChat.forEach(uic => {
-                  if (doc.data().uid !== uic.id) {
-                    uic.onSnapshot(res => {
-                      const chat = {
-                        id: chats.id,
-                        chatAt: chats.data().chatAt,
-                        userInChat: res.data()
-                      }
-                      vm.$store.commit('FETCH_CHATS', chat)
-                    })
-                  }
+              doc.data().chats.forEach(chat => {
+                chat.onSnapshot(res => {
+                  const chats = res
+                  res.data().usersInChat.forEach(uic => {
+                    if (doc.data().uid !== uic.id) {
+                      uic.onSnapshot(res => {
+                        const chat = {
+                          id: chats.id,
+                          chatAt: chats.data().chatAt,
+                          userInChat: res.data()
+                        }
+                        vm.$store.commit('FETCH_CHATS', chat)
+                      })
+                    }
+                  })
                 })
               })
             })
+            next()
+          }).catch(async err => {
+            if (err) {
+              const {
+                displayName,
+                email,
+                emailVerified,
+                photoURL,
+                isAnonymous,
+                uid
+              } = user
+              let data = {}
+              const currentAuthUser = await vm.$db.collection('users').doc(uid).get()
+              if (!currentAuthUser.exists) {
+                data = {
+                  isTyping: false,
+                  isLogin: true,
+                  coords: new vm.$firebase.firestore.GeoPoint(1, 1),
+                  uid,
+                  displayName,
+                  email,
+                  emailVerified,
+                  photoURL: defPhotoURL || photoURL,
+                  isAnonymous,
+                  lastTimeLogin: new Date()
+                }
+              } else {
+                data = {
+                  isTyping: false,
+                  isLogin: true,
+                  coords: new vm.$firebase.firestore.GeoPoint(1, 1),
+                  uid,
+                  displayName,
+                  email,
+                  emailVerified,
+                  isAnonymous,
+                  lastTimeLogin: new Date()
+                }
+              }
+              vm.$db.collection('users').doc(uid).set(data, { merge: true })
+              vm.$db.collection('users').onSnapshot(docs => {
+                const data = []
+                docs.docs.forEach(doc => {
+                  if (doc.id !== uid) {
+                    data.push(doc.data())
+                  }
+                })
+                vm.$store.commit('SET_USERS', data)
+              })
+              vm.$db.collection('users').doc(uid).onSnapshot(doc => {
+                vm.$store.commit('SET_AUTH_USER', doc.data())
+                doc.data().chats.forEach(chat => {
+                  chat.onSnapshot(res => {
+                    const chats = res
+                    res.data().usersInChat.forEach(uic => {
+                      if (doc.data().uid !== uic.id) {
+                        uic.onSnapshot(res => {
+                          const chat = {
+                            id: chats.id,
+                            chatAt: chats.data().chatAt,
+                            userInChat: res.data()
+                          }
+                          vm.$store.commit('FETCH_CHATS', chat)
+                        })
+                      }
+                    })
+                  })
+                })
+              })
+              next()
+            }
           })
-          next()
         } else {
           vm.$store.commit('LOGOUT')
           vm.$router.push('/login')
