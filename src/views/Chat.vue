@@ -167,8 +167,8 @@
             <p>Latitude: {{ authUser.coords.latitude }}</p>
             <p>Longitude: {{ authUser.coords.longitude }}</p>
           </div>
-          <GmapMap :center="{lat: 10, lng: 10}"
-                  :zoom="7"
+          <GmapMap :center="{lat: authUser.coords.latitude || -6.597146899999999, lng: authUser.coords.longitude || 106.8060388}"
+                  :zoom="14"
                   style="width: 100%; height: 300px;">
           </GmapMap>
         </div>
@@ -506,7 +506,7 @@ export default {
               data = {
                 isTyping: false,
                 isLogin: true,
-                coords: new vm.$firebase.firestore.GeoPoint(coords.lat || 1, coords.lng || 1),
+                coords: new vm.$firebase.firestore.GeoPoint(coords.lat || -6.597146899999999, coords.lng || 106.8060388),
                 uid,
                 displayName,
                 email,
@@ -519,7 +519,7 @@ export default {
               data = {
                 isTyping: false,
                 isLogin: true,
-                coords: new vm.$firebase.firestore.GeoPoint(coords.lat || 1, coords.lng || 1),
+                coords: new vm.$firebase.firestore.GeoPoint(coords.lat || -6.597146899999999, coords.lng || 106.8060388),
                 uid,
                 displayName,
                 email,
