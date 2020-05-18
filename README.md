@@ -69,6 +69,11 @@ VUE_APP_SECRET_KEY=YOUR_API_KEY
     <img width="430" src="./screenshots/chatdoang-chat1.png">
 </div>
 <br>
+<div align="center">
+    <h4 align="center">USER INFO</h4>
+    <img width="860" src="./screenshots/chatdoang-userdetail.png">
+</div>
+<br>
 
 
 ## Contributing
