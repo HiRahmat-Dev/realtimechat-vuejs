@@ -52,8 +52,7 @@ $ nano .env.local
 ```
 
 ```
-VUE_APP_ROOT_URL=YOUR_HOST_URL
-VUE_APP_SECRET_KEY=YOUR_API_KEY
+VUE_APP_API_KEY=YOUR_GOOGLE_API_KEY
 ```
 
 ## Screenshots
