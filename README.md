@@ -8,7 +8,7 @@
 )
 
 <p align="center">
-  <img height="100" src="./screenshots/library-logo.png">
+  <img height="100" src="https://raw.githubusercontent.com/HiRahmat-Dev/realtimechat-vuejs/e9086b58b1a37b1028c524eb81fb207e6c7e135e/src/assets/img/svg/chat-doang.svg">
   <img height="100" src="https://vuejs.org/images/logo.png">
 </p>
 <p align="center">
@@ -59,19 +59,14 @@ VUE_APP_SECRET_KEY=YOUR_API_KEY
 ## Screenshots
 
 <div align="center">
-    <h4 align="center">LANDING PAGE</h4>
-    <img width="860" src="./screenshots/library-landing.gif">
-</div>
-<br>
-<div align="center">
-    <h4 align="center">LOGIN & REGISTER PAGE</h4>
-    <img width="430" src="./screenshots/library-login.gif">
-    <img width="430" src="./screenshots/library-register.png">
+    <h4 align="center">LOGIN & NEW CHAT</h4>
+    <img width="430" src="./screenshots/chatdoang-login.png">
+    <img width="430" src="./screenshots/chatdoang-newchat.png">
 </div>
 <div align="center">
-    <h4 align="center"></h4>
-    <img width="430" src="./screenshots/library-dashboard.gif">   
-    <img width="430" src="./screenshots/library-borrow-return.gif">
+    <h4 align="center">CHATS ROOM</h4>
+    <img width="430" src="./screenshots/chatdoang-chat2.png">   
+    <img width="430" src="./screenshots/chatdoang-chat1.png">
 </div>
 <br>
 
