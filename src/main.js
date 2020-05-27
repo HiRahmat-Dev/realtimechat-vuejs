@@ -9,7 +9,7 @@ import * as VueGoogleMaps from 'vue2-google-maps'
 // Required for side-effects
 import 'firebase/firestore'
 const firebaseConfig = {
-  apiKey: process.env.VUE_APP_API_KEY,
+  apiKey: 'AIzaSyB_jrhMU1l0ARnqML1tTX7tXMNGMAVBdTY',
   authDomain: 'chat-doang.firebaseapp.com',
   databaseURL: 'https://chat-doang.firebaseio.com',
   projectId: 'chat-doang',
